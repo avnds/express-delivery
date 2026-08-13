@@ -29,7 +29,7 @@ export default function CourierPage() {
         const data = await res.json();
         // Nota: se quiser listar entregas já finalizadas para permitir a reedição rápida no card, 
         // você pode ajustar o filtro aqui conforme sua necessidade operacional.
-        setDeliveries(data.filter((d: Delivery) => d.status !== ('CANCELLED' as any)));
+        setDeliveries(data.filter((d: Delivery) => d.status !== 'DELIVERED' && d.status !== ('CANCELLED' as any)));
       }
     } catch (error) {
       console.error('Erro ao carregar entregas do entregador:', error);
