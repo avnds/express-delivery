@@ -79,7 +79,7 @@ export default function SupervisorPage() {
   // Debounce para a busca de endereço GPS na edição
   useEffect(() => {
     if (isSelectingSuggestion) return;
-    if (editAddress.trim().length < 3 || editLatitude !== null) {
+    if (editAddress.trim().length < 3) {
       setSuggestions([]);
       return;
     }
@@ -100,13 +100,13 @@ export default function SupervisorPage() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [editAddress, editLatitude, isSelectingSuggestion]);
+  }, [editAddress, isSelectingSuggestion]);
 
   const handleAddressChange = (value: string) => {
     setIsSelectingSuggestion(false);
     setEditAddress(value);
-    // Ao alterar ou apagar o endereço manualmente, limpamos as coordenadas
-    // para que o sistema passe a buscar/enviar somente a string de texto.
+    
+    // Força a limpeza imediata das coordenadas ao digitar manualmente
     setEditLatitude(null);
     setEditLongitude(null);
   };
@@ -162,8 +162,8 @@ export default function SupervisorPage() {
         body: JSON.stringify({
           recipient_name: editRecipient,
           address: editAddress,
-          latitude: editLatitude, // Será null se alterado/apagado manualmente
-          longitude: editLongitude, // Será null se alterado/apagado manualmente
+          latitude: editLatitude, // Virá null se o supervisor digitou/apagou manualmente
+          longitude: editLongitude, // Virá null se o supervisor digitou/apagou manualmente
           tracking_code: editTrackingCode,
           status: editStatus,
         }),
