@@ -156,7 +156,7 @@ export default function SupervisorPage() {
                               type="text"
                               value={editTrackingCode}
                               onChange={(e) => setEditTrackingCode(e.target.value)}
-                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white font-mono"
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white font-mono text-slate-900"
                             />
                           </div>
                           <div>
@@ -165,7 +165,7 @@ export default function SupervisorPage() {
                               type="text"
                               value={editRecipient}
                               onChange={(e) => setEditRecipient(e.target.value)}
-                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white"
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900"
                             />
                           </div>
                           <div>
@@ -173,7 +173,7 @@ export default function SupervisorPage() {
                             <select
                               value={editStatus}
                               onChange={(e) => setEditStatus(e.target.value as DeliveryItem['status'])}
-                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white font-medium"
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white font-medium text-slate-900"
                             >
                               <option value="PENDING">PENDING</option>
                               <option value="IN_TRANSIT">IN_TRANSIT</option>
@@ -189,7 +189,7 @@ export default function SupervisorPage() {
                             type="text"
                             value={editAddress}
                             onChange={(e) => setEditAddress(e.target.value)}
-                            className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white"
+                            className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900"
                           />
                         </div>
 
