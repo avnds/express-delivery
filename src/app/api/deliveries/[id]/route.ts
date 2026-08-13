@@ -8,7 +8,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { recipient_name, address, tracking_code, status } = body;
+    const { recipient_name, address, latitude, longitude, tracking_code, status } = body;
 
     // Busca a entrega atual para manter os dados que não forem alterados
     const currentDelivery = await db.execute({
@@ -24,22 +24,33 @@ export async function PATCH(
 
     const updatedRecipientName = recipient_name ?? item.recipient_name;
     const updatedAddress = address ?? item.address;
+    
+    // Se latitude/longitude vierem explicitamente como null, salvamos null. 
+    // Se vierem undefined (não enviados, como em alteração rápida de status), mantemos o atual.
+    const updatedLat = latitude !== undefined ? latitude : item.lat;
+    const updatedLng = longitude !== undefined ? longitude : item.lng;
+
     const updatedTrackingCode = tracking_code ?? item.tracking_code;
     const updatedStatus = status ?? item.status;
 
     await db.execute({
       sql: `UPDATE deliveries 
-            SET recipient_name = ?, address = ?, tracking_code = ?, status = ? 
+            SET recipient_name = ?, address = ?, lat = ?, lng = ?, tracking_code = ?, status = ? 
             WHERE id = ?`,
-      args: [updatedRecipientName, updatedAddress, updatedTrackingCode, updatedStatus, id],
+      args: [
+        updatedRecipientName, 
+        updatedAddress, 
+        updatedLat, 
+        updatedLng, 
+        updatedTrackingCode, 
+        updatedStatus, 
+        id
+      ],
     });
 
-    return NextResponse.json({ message: 'Entrega atualizada com sucesso!' });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Erro ao atualizar entrega:', error);
-    return NextResponse.json(
-      { error: 'Erro interno ao atualizar a entrega' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Erro interno ao atualizar entrega' }, { status: 500 });
   }
 }
