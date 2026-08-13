@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PackagePlus, Loader2, MapPin, CheckCircle2 } from 'lucide-react';
 
 interface AddressSuggestion {
@@ -22,38 +22,35 @@ export default function OperatorPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Busca de endereços via Nominatim (OpenStreetMap)
-  const handleAddressChange = async (value: string) => {
-    setAddress(value);
-    setLatitude(null);
-    setLongitude(null);
-
-    if (value.trim().length < 3) {
+  // Debounce para a busca de endereço
+  useEffect(() => {
+    if (address.trim().length < 3 || latitude !== null) {
       setSuggestions([]);
       return;
     }
 
-    setIsSearchingAddress(true);
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          value
-        )}&limit=5&addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': 'DeliveryApp/1.0',
-          },
+    const timer = setTimeout(async () => {
+      setIsSearchingAddress(true);
+      try {
+        const response = await fetch(`/api/geocode?q=${encodeURIComponent(address)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSuggestions(data);
         }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setSuggestions(data);
+      } catch (error) {
+        console.error('Erro ao buscar sugestões:', error);
+      } finally {
+        setIsSearchingAddress(false);
       }
-    } catch (error) {
-      console.error('Erro ao buscar sugestões de endereço:', error);
-    } finally {
-      setIsSearchingAddress(false);
-    }
+    }, 500); // Aguarda 500ms após o usuário parar de digitar
+
+    return () => clearTimeout(timer);
+  }, [address, latitude]);
+
+  const handleAddressChange = (value: string) => {
+    setAddress(value);
+    setLatitude(null);
+    setLongitude(null);
   };
 
   const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
@@ -91,7 +88,8 @@ export default function OperatorPage() {
         setLatitude(null);
         setLongitude(null);
       } else {
-        alert('Erro ao criar entrega.');
+        const errData = await res.json();
+        alert(`Erro ao criar entrega: ${errData.error || 'Falha no servidor'}`);
       }
     } catch (error) {
       console.error('Erro ao enviar formulário:', error);
