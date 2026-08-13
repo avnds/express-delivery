@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package } from 'lucide-react';
+import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
 
 interface AddressSuggestion {
   place_id: number;
@@ -146,7 +146,7 @@ export default function OperatorPage() {
         setAddress('');
         setLatitude(null);
         setLongitude(null);
-        fetchDeliveries(); // Recarrega a lista automaticamente
+        fetchDeliveries();
       } else {
         const errData = await res.json();
         alert(`Erro ao criar entrega: ${errData.error || 'Falha no servidor'}`);
@@ -158,6 +158,12 @@ export default function OperatorPage() {
       setIsSubmitting(false);
     }
   };
+
+  // Cálculos para o Painel Resumo
+  const totalDeliveries = deliveries.length;
+  const pendingCount = deliveries.filter((d) => d.status === 'PENDING').length;
+  const inTransitCount = deliveries.filter((d) => d.status === 'IN_TRANSIT').length;
+  const deliveredCount = deliveries.filter((d) => d.status === 'DELIVERED').length;
 
   const getStatusBadge = (status: Delivery['status']) => {
     switch (status) {
@@ -197,6 +203,49 @@ export default function OperatorPage() {
             <RefreshCw className={`h-4 w-4 ${isLoadingDeliveries ? 'animate-spin' : ''}`} />
             <span>Atualizar Lista</span>
           </button>
+        </div>
+
+        {/* Painel Resumo com Totais */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-slate-100 text-slate-700 rounded-xl">
+              <Package className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
+              <h3 className="text-lg font-black text-slate-900">{totalDeliveries}</h3>
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">Pendentes</p>
+              <h3 className="text-lg font-black text-slate-900">{pendingCount}</h3>
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+              <Truck className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">Em Trânsito</p>
+              <h3 className="text-lg font-black text-slate-900">{inTransitCount}</h3>
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+              <CheckCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Entregues</p>
+              <h3 className="text-lg font-black text-slate-900">{deliveredCount}</h3>
+            </div>
+          </div>
         </div>
 
         {/* Layout Grid: Formulário na esquerda, Tabela na direita */}
