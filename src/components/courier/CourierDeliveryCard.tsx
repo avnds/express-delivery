@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Navigation, CheckCircle2 } from 'lucide-react';
+import { MapPin, Navigation, CheckCircle2, Phone, MessageCircle } from 'lucide-react';
 
 interface CourierDeliveryCardProps {
   id: string;
@@ -10,6 +10,7 @@ interface CourierDeliveryCardProps {
   lat?: number;
   lng?: number;
   status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED';
+  phone?: string | null;
   onUpdateStatus: (id: string, newStatus: 'IN_TRANSIT' | 'DELIVERED') => void;
 }
 
@@ -21,6 +22,7 @@ export function CourierDeliveryCard({
   lat,
   lng,
   status,
+  phone,
   onUpdateStatus,
 }: CourierDeliveryCardProps) {
   const handleOpenGPS = () => {
@@ -30,6 +32,8 @@ export function CourierDeliveryCard({
       window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank');
     }
   };
+
+  const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-4">
@@ -50,12 +54,38 @@ export function CourierDeliveryCard({
         </span>
       </div>
 
-      <div>
-        <h3 className="font-bold text-slate-900 text-sm mb-1">{recipientName}</h3>
-        <p className="text-xs text-slate-500 flex items-start gap-1.5 leading-relaxed">
-          <MapPin className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
-          <span>{address}</span>
-        </p>
+      <div className="space-y-2">
+        <div>
+          <h3 className="font-bold text-slate-900 text-sm mb-1">{recipientName}</h3>
+          <p className="text-xs text-slate-500 flex items-start gap-1.5 leading-relaxed">
+            <MapPin className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
+            <span>{address}</span>
+          </p>
+        </div>
+
+        {phone && (
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-xs font-medium text-slate-600">Tel: {phone}</span>
+            <div className="flex items-center gap-1.5 ml-auto">
+              <a
+                href={`tel:${cleanPhone}`}
+                className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
+                title="Ligar"
+              >
+                <Phone className="h-3.5 w-3.5" />
+              </a>
+              <a
+                href={`https://wa.me/55${cleanPhone}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg transition"
+                title="WhatsApp"
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
@@ -64,7 +94,7 @@ export function CourierDeliveryCard({
           className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition"
         >
           <Navigation className="h-3.5 w-3.5 text-indigo-600" />
-          <span>Abrir GPS</span>
+          <span>GPS</span>
         </button>
 
         {status === 'PENDING' && (
@@ -72,7 +102,7 @@ export function CourierDeliveryCard({
             onClick={() => onUpdateStatus(id, 'IN_TRANSIT')}
             className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition shadow-md shadow-indigo-600/20"
           >
-            Coletar Entrega
+            Coletar
           </button>
         )}
 
