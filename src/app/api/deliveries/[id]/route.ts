@@ -47,7 +47,7 @@ export async function PATCH(
     // A descrição de finalização só muda se vier explicitamente no payload; caso contrário, preserva o atual
     const updatedCompletionNotes = completion_notes !== undefined ? completion_notes : item.completion_notes;
 
-    // O valor da taxa pago ao entregador (pode ser atualizado por supervisor ou entregador na finalização)
+    // O valor da taxa é preservado integralmente, mesmo se o status mudar para CANCELLED
     const updatedDeliveryFee = delivery_fee !== undefined ? delivery_fee : item.delivery_fee;
 
     await db.execute({

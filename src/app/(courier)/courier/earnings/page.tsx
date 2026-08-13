@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, DollarSign, Calendar, CheckCircle2, TrendingUp, Loader2 } from 'lucide-react';
+import { ArrowLeft, DollarSign, Calendar, CheckCircle2, TrendingUp, Loader2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface DeliveryItem {
@@ -14,6 +14,7 @@ interface DeliveryItem {
 
 interface EarningRecord {
   id: string;
+  status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
   trackingCode: string;
   date: string;
   amount: number;
@@ -30,9 +31,9 @@ export default function EarningsPage() {
         if (res.ok) {
           const data: DeliveryItem[] = await res.json();
           
-          // Filtra apenas as entregas concluídas (DELIVERED) e formata os dados
-          const deliveredItems = data
-            .filter((item) => item.status === 'DELIVERED')
+          // Mantém todas que não estão pendentes (inclui DELIVERED e CANCELLED)
+          const validItems = data
+            .filter((item) => item.status !== 'PENDING')
             .map((item) => {
               let formattedDate = 'Recentemente';
               if (item.created_at) {
@@ -49,13 +50,14 @@ export default function EarningsPage() {
 
               return {
                 id: item.id,
+                status: item.status,
                 trackingCode: item.tracking_code,
                 date: formattedDate,
                 amount: Number(item.delivery_fee || 0),
               };
             });
 
-          setEarnings(deliveredItems);
+          setEarnings(validItems);
         }
       } catch (error) {
         console.error('Erro ao carregar extrato de ganhos:', error);
@@ -115,29 +117,39 @@ export default function EarningsPage() {
             </div>
           ) : earnings.length === 0 ? (
             <div className="p-8 text-center text-slate-400 text-xs">
-              Nenhuma corrida concluída encontrada.
+              Nenhuma corrida encontrada.
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
-              {earnings.map((item) => (
-                <div key={item.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
-                      <CheckCircle2 className="h-4 w-4" />
+              {earnings.map((item) => {
+                const isCancelled = item.status === 'CANCELLED';
+                return (
+                  <div key={item.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-xl ${isCancelled ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                        {isCancelled ? <XCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-xs text-slate-800">{item.trackingCode}</span>
+                          {isCancelled && (
+                            <span className="text-[9px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
+                              CANCELADA
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
+                          <Calendar className="h-3 w-3" />
+                          <span>{item.date}</span>
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="font-mono font-bold text-xs text-slate-800">{item.trackingCode}</span>
-                      <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
-                        <Calendar className="h-3 w-3" />
-                        <span>{item.date}</span>
-                      </p>
-                    </div>
+                    <span className={`font-bold text-sm ${isCancelled ? 'text-slate-400' : 'text-emerald-600'}`}>
+                      + R$ {item.amount.toFixed(2)}
+                    </span>
                   </div>
-                  <span className="font-bold text-sm text-emerald-600">
-                    + R$ {item.amount.toFixed(2)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
