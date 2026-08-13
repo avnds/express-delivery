@@ -105,6 +105,8 @@ export default function SupervisorPage() {
   const handleAddressChange = (value: string) => {
     setIsSelectingSuggestion(false);
     setEditAddress(value);
+    // Ao alterar ou apagar o endereço manualmente, limpamos as coordenadas
+    // para que o sistema passe a buscar/enviar somente a string de texto.
     setEditLatitude(null);
     setEditLongitude(null);
   };
@@ -160,8 +162,8 @@ export default function SupervisorPage() {
         body: JSON.stringify({
           recipient_name: editRecipient,
           address: editAddress,
-          latitude: editLatitude,
-          longitude: editLongitude,
+          latitude: editLatitude, // Será null se alterado/apagado manualmente
+          longitude: editLongitude, // Será null se alterado/apagado manualmente
           tracking_code: editTrackingCode,
           status: editStatus,
         }),
