@@ -32,7 +32,6 @@ export function CourierDeliveryCard({
 }: CourierDeliveryCardProps) {
   const [isCompleting, setIsCompleting] = useState(false);
   const [notesInput, setNotesInput] = useState(completionNotes || '');
-  const [feeInput, setFeeInput] = useState(deliveryFee !== undefined && deliveryFee !== null ? String(deliveryFee) : '');
 
   const handleOpenGPS = () => {
     if (lat && lng) {
@@ -47,7 +46,7 @@ export function CourierDeliveryCard({
   const handleSaveDelivery = (targetStatus: 'IN_TRANSIT' | 'DELIVERED' = 'DELIVERED') => {
     onUpdateStatus(id, targetStatus, {
       completion_notes: notesInput,
-      delivery_fee: feeInput ? parseFloat(feeInput) : 0,
+      delivery_fee: deliveryFee !== undefined && deliveryFee !== null ? deliveryFee : 0,
     });
     setIsCompleting(false);
   };
@@ -118,11 +117,11 @@ export function CourierDeliveryCard({
           </div>
         )}
 
-        {/* Formulário de conclusão / reedição */}
+        {/* Formulário de conclusão / reedição (Sem campo de edição de valor) */}
         {isCompleting && (
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-3 mt-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-800">Finalizar / Editar Entrega</span>
+              <span className="text-xs font-bold text-slate-800">Finalizar / Concluir Entrega</span>
               <button onClick={() => setIsCompleting(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4 w-4" />
               </button>
@@ -135,17 +134,6 @@ export function CourierDeliveryCard({
                   placeholder="Ex: João (Portaria) ou Cod 123"
                   value={notesInput}
                   onChange={(e) => setNotesInput(e.target.value)}
-                  className="w-full text-xs px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Valor da Entrega (R$)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={feeInput}
-                  onChange={(e) => setFeeInput(e.target.value)}
                   className="w-full text-xs px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
@@ -195,7 +183,7 @@ export function CourierDeliveryCard({
             className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition shadow-sm"
           >
             <Edit3 className="h-3.5 w-3.5" />
-            <span>Editar Finalização</span>
+            <span>Editar Obs.</span>
           </button>
         )}
       </div>
