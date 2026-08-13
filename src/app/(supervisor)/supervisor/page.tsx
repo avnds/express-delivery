@@ -111,14 +111,19 @@ export default function SupervisorPage() {
 
   const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
     setIsSelectingSuggestion(true);
-    const { address, display_name } = suggestion;
     
-    let formattedAddress = display_name;
-    
-    if (address && address.road) {
-      const road = address.road;
-      const houseNumber = address.house_number ? `, ${address.house_number}` : '';
-      formattedAddress = `${road}${houseNumber}`;
+    const addr = suggestion.address;
+    let formattedAddress = suggestion.display_name;
+
+    if (addr) {
+      const road = addr.road || '';
+      const houseNumber = addr.house_number || '';
+      
+      if (road) {
+        formattedAddress = houseNumber 
+          ? `${road}, ${houseNumber}` 
+          : road;
+      }
     }
 
     setEditAddress(formattedAddress);
