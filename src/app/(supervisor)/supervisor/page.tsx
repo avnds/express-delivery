@@ -14,22 +14,30 @@ export default function SupervisorPage() {
   const [deliveries, setDeliveries] = useState<DeliveryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchDeliveries = useCallback(async () => {
+  const fetchDeliveries = useCallback(async (isSilent = false) => {
+    if (!isSilent) setIsLoading(true);
     try {
-      const res = await fetch('/api/deliveries');
+      const res = await fetch('/api/deliveries', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         setDeliveries(data);
       }
-    } catch {
-      console.error('Erro ao carregar entregas no supervisor');
+    } catch (error) {
+      console.error('Erro ao carregar entregas no supervisor:', error);
     } finally {
-      setIsLoading(false);
+      if (!isSilent) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchDeliveries();
+
+    // Polling a cada 4 segundos no painel do supervisor
+    const interval = setInterval(() => {
+      fetchDeliveries(true);
+    }, 4000);
+
+    return () => clearInterval(interval);
   }, [fetchDeliveries]);
 
   const handleOverrideStatus = async (id: string, newStatus: DeliveryItem['status']) => {
@@ -41,10 +49,12 @@ export default function SupervisorPage() {
       });
 
       if (res.ok) {
-        fetchDeliveries();
+        fetchDeliveries(true);
+      } else {
+        alert('Erro ao atualizar no servidor.');
       }
     } catch {
-      alert('Erro ao forçar alteração de status.');
+      alert('Erro de conexão ao alterar o status.');
     }
   };
 
@@ -74,7 +84,7 @@ export default function SupervisorPage() {
               <span>Carregando dados do banco...</span>
             </div>
           ) : deliveries.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 text-xs">Nenhuma ordem encontrada.</div>
+            <div className="p-8 text-center text-slate-400 text-xs">Nenhuma ordem encontrada no banco.</div>
           ) : (
             <div className="divide-y divide-slate-100">
               {deliveries.map((item) => (

@@ -9,8 +9,8 @@ interface Delivery {
   tracking_code: string;
   recipient_name: string;
   address: string;
-  lat?: number;
-  lng?: number;
+  lat?: number | string;
+  lng?: number | string;
   status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED';
 }
 
@@ -18,23 +18,31 @@ export default function CourierPage() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchDeliveries = useCallback(async () => {
+  const fetchDeliveries = useCallback(async (isSilent = false) => {
+    if (!isSilent) setIsLoading(true);
     try {
-      const res = await fetch('/api/deliveries');
+      const res = await fetch('/api/deliveries', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        // Filtra apenas as entregas que ainda não foram concluídas/canceladas
         setDeliveries(data.filter((d: Delivery) => d.status !== 'DELIVERED' && d.status !== ('CANCELLED' as any)));
       }
-    } catch {
-      console.error('Erro ao carregar fila do entregador');
+    } catch (error) {
+      console.error('Erro ao carregar entregas do entregador:', error);
     } finally {
-      setIsLoading(false);
+      if (!isSilent) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    // Busca inicial
     fetchDeliveries();
+
+    // Polling: Atualiza silenciosamente a cada 4 segundos
+    const interval = setInterval(() => {
+      fetchDeliveries(true);
+    }, 4000);
+
+    return () => clearInterval(interval);
   }, [fetchDeliveries]);
 
   const handleUpdateStatus = async (id: string, newStatus: 'IN_TRANSIT' | 'DELIVERED') => {
@@ -46,10 +54,12 @@ export default function CourierPage() {
       });
 
       if (res.ok) {
-        fetchDeliveries(); // Recarrega a lista com o status atualizado
+        fetchDeliveries(true);
+      } else {
+        alert('Falha ao atualizar o status.');
       }
     } catch {
-      alert('Erro ao atualizar status da entrega.');
+      alert('Erro de rede ao atualizar status.');
     }
   };
 
@@ -85,7 +95,7 @@ export default function CourierPage() {
           </div>
         ) : deliveries.length === 0 ? (
           <div className="bg-white p-8 rounded-2xl text-center text-slate-400 text-xs font-medium border border-slate-200">
-            Nenhuma entrega na sua fila no momento!
+            Nenhuma entrega pendente na sua fila!
           </div>
         ) : (
           deliveries.map((delivery) => (
@@ -95,8 +105,8 @@ export default function CourierPage() {
               trackingCode={delivery.tracking_code}
               recipientName={delivery.recipient_name}
               address={delivery.address}
-              lat={delivery.lat}
-              lng={delivery.lng}
+              lat={delivery.lat ? Number(delivery.lat) : undefined}
+              lng={delivery.lng ? Number(delivery.lng) : undefined}
               status={delivery.status}
               onUpdateStatus={handleUpdateStatus}
             />
