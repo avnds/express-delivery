@@ -25,22 +25,22 @@ export async function POST(request: Request) {
 
     const id = crypto.randomUUID();
 
+    // Tratamento estrito de tipo para o Turso
+    const safeLat = typeof latitude === 'number' && !isNaN(latitude) ? latitude : null;
+    const safeLng = typeof longitude === 'number' && !isNaN(longitude) ? longitude : null;
+    const safeAddress = address || '';
+
+    // Mapeado exatamente para as colunas 'lat' e 'lng' do seu schema
     await db.execute({
-      sql: `INSERT INTO deliveries (id, tracking_code, recipient_name, address, latitude, longitude, status) 
+      sql: `INSERT INTO deliveries (id, tracking_code, recipient_name, address, lat, lng, status) 
             VALUES (?, ?, ?, ?, ?, ?, 'PENDING')`,
-      args: [
-        id,
-        tracking_code,
-        recipient_name,
-        address || '',
-        latitude ?? null,
-        longitude ?? null,
-      ],
+      args: [id, tracking_code, recipient_name, safeAddress, safeLat, safeLng],
     });
 
     return NextResponse.json({ message: 'Entrega criada com sucesso!', id }, { status: 201 });
   } catch (error) {
     console.error('Erro ao criar entrega:', error);
-    return NextResponse.json({ error: 'Erro ao criar entrega' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Erro interno';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
