@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Shield, Loader2, Edit3, Check, X, Phone, MessageSquare, DollarSign } from 'lucide-react';
+import { Shield, Loader2, Edit3, Check, X, Phone, MessageSquare, DollarSign, Trash2, Download } from 'lucide-react';
 
 interface DeliveryItem {
   id: string;
@@ -19,6 +19,8 @@ interface DeliveryItem {
 export default function SupervisorPage() {
   const [deliveries, setDeliveries] = useState<DeliveryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Ref para controlar se estamos editando (evita congelamento pelo polling)
   const isEditingRef = useRef(false);
@@ -61,6 +63,55 @@ export default function SupervisorPage() {
     return () => clearInterval(interval);
   }, [fetchDeliveries]);
 
+  // Função para exportar o arquivo .txt
+  const handleExportTxt = async () => {
+    try {
+      setIsExporting(true);
+      const res = await fetch('/api/supervisor/data');
+      if (!res.ok) throw new Error('Falha ao exportar');
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `historico-entregas-${new Date().toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      alert('Erro ao baixar o histórico.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Função para apagar todos os dados operacionais
+  const handleClearData = async () => {
+    const confirmation = window.confirm(
+      'ATENÇÃO: Tem certeza que deseja apagar todos os dados operacionais? Esta ação não pode ser desfeita.'
+    );
+    if (!confirmation) return;
+
+    try {
+      setIsClearing(true);
+      const res = await fetch('/api/supervisor/data', {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        alert('Dados operacionais apagados com sucesso!');
+        fetchDeliveries(true);
+      } else {
+        alert('Erro ao apagar os dados.');
+      }
+    } catch (error) {
+      alert('Erro de rede ao tentar limpar os dados.');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   // Apenas atualiza o texto e limpa as coordenadas para envio puramente em string
   const handleAddressChange = (value: string) => {
     setEditAddress(value);
@@ -100,7 +151,6 @@ export default function SupervisorPage() {
           status: editStatus,
           phone: editPhone,
           delivery_fee: editDeliveryFee !== '' ? parseFloat(editDeliveryFee) : 0,
-          // Nota: O completion_notes não é enviado aqui, logo o backend preserva o que o entregador salvou!
         }),
       });
 
@@ -139,7 +189,7 @@ export default function SupervisorPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-red-600 text-white rounded-2xl shadow-md shadow-red-600/20">
               <Shield className="h-6 w-6" />
@@ -148,6 +198,26 @@ export default function SupervisorPage() {
               <h1 className="text-2xl font-black text-slate-900 tracking-tight">Painel do Supervisor</h1>
               <p className="text-xs text-slate-500">Gerenciamento global e edição total das ordens de entrega</p>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportTxt}
+              disabled={isExporting}
+              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-sm disabled:opacity-50"
+            >
+              {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              <span>Salvar Histórico (.txt)</span>
+            </button>
+
+            <button
+              onClick={handleClearData}
+              disabled={isClearing}
+              className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition disabled:opacity-50"
+            >
+              {isClearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              <span>Apagar Dados</span>
+            </button>
           </div>
         </div>
 
@@ -275,7 +345,6 @@ export default function SupervisorPage() {
                           </div>
                           <p className="text-xs text-slate-500">{item.address || 'Sem endereço informado'}</p>
                           
-                          {/* Exibição e botões de contato se houver telefone */}
                           {item.phone && (
                             <div className="flex items-center gap-3 pt-1">
                               <span className="text-[11px] text-slate-600 font-medium">Tel: {item.phone}</span>
