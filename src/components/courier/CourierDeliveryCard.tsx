@@ -117,24 +117,24 @@ export function CourierDeliveryCard({
           </div>
         )}
 
-        {/* Formulário de conclusão / reedição (Sem campo de edição de valor) */}
+        {/* Formulário de conclusão / reedição com contraste corrigido */}
         {isCompleting && (
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-3 mt-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-800">Finalizar / Concluir Entrega</span>
-              <button onClick={() => setIsCompleting(false)} className="text-slate-400 hover:text-slate-600">
+              <span className="text-xs font-bold text-slate-900">Finalizar / Concluir Entrega</span>
+              <button onClick={() => setIsCompleting(false)} className="text-slate-500 hover:text-slate-800">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="space-y-2">
               <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Nome Recebedor / Código</label>
+                <label className="block text-[10px] font-bold text-slate-700 uppercase mb-1">Nome Recebedor / Código</label>
                 <input
                   type="text"
                   placeholder="Ex: João (Portaria) ou Cod 123"
                   value={notesInput}
                   onChange={(e) => setNotesInput(e.target.value)}
-                  className="w-full text-xs px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400"
                 />
               </div>
               <button
