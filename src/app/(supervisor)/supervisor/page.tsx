@@ -111,21 +111,17 @@ export default function SupervisorPage() {
 
   const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
     setIsSelectingSuggestion(true);
-    const addr = suggestion.address;
-
-    if (addr && addr.road) {
-      const street = addr.road;
-      const number = addr.house_number ? `, ${addr.house_number}` : '';
-      const neighborhood = addr.suburb ? ` - ${addr.suburb}` : '';
-      const city = addr.city || addr.town || addr.municipality;
-      const cityText = city ? ` (${city})` : '';
-
-      const formattedAddress = `${street}${number}${neighborhood}${cityText}`;
-      setEditAddress(formattedAddress);
-    } else {
-      setEditAddress(suggestion.display_name);
+    const { address, display_name } = suggestion;
+    
+    let formattedAddress = display_name;
+    
+    if (address && address.road) {
+      const road = address.road;
+      const houseNumber = address.house_number ? `, ${address.house_number}` : '';
+      formattedAddress = `${road}${houseNumber}`;
     }
 
+    setEditAddress(formattedAddress);
     setEditLatitude(parseFloat(suggestion.lat));
     setEditLongitude(parseFloat(suggestion.lon));
     setSuggestions([]);
