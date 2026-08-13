@@ -3,21 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Shield, Loader2, Edit3, Check, X, MapPin } from 'lucide-react';
 
-interface AddressSuggestion {
-  place_id: number;
-  display_name: string;
-  lat: string;
-  lon: string;
-  address?: {
-    road?: string;
-    house_number?: string;
-    suburb?: string;
-    city?: string;
-    town?: string;
-    municipality?: string;
-  };
-}
-
 interface DeliveryItem {
   id: string;
   tracking_code: string;
@@ -43,11 +28,6 @@ export default function SupervisorPage() {
   const [editLongitude, setEditLongitude] = useState<number | null>(null);
   const [editTrackingCode, setEditTrackingCode] = useState('');
   const [editStatus, setEditStatus] = useState<DeliveryItem['status']>('PENDING');
-
-  // Estados para sugestões de endereço no Supervisor
-  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
-  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
-  const [isSelectingSuggestion, setIsSelectingSuggestion] = useState(false);
 
   const fetchDeliveries = useCallback(async (isSilent = false) => {
     if (isEditingRef.current) return;
@@ -76,67 +56,15 @@ export default function SupervisorPage() {
     return () => clearInterval(interval);
   }, [fetchDeliveries]);
 
-  // Debounce para a busca de endereço GPS na edição
-  useEffect(() => {
-    if (isSelectingSuggestion) return;
-    if (editAddress.trim().length < 3) {
-      setSuggestions([]);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setIsSearchingAddress(true);
-      try {
-        const response = await fetch(`/api/geocode?q=${encodeURIComponent(editAddress)}`);
-        if (response.ok) {
-          const data = await response.json();
-          setSuggestions(data);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar sugestões:', error);
-      } finally {
-        setIsSearchingAddress(false);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [editAddress, isSelectingSuggestion]);
-
+  // Apenas atualiza o texto e limpa as coordenadas para envio puramente em string
   const handleAddressChange = (value: string) => {
-    setIsSelectingSuggestion(false);
     setEditAddress(value);
-    
-    // Força a limpeza imediata das coordenadas ao digitar manualmente
     setEditLatitude(null);
     setEditLongitude(null);
   };
 
-  const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
-    setIsSelectingSuggestion(true);
-    
-    const addr = suggestion.address;
-    let formattedAddress = suggestion.display_name;
-
-    if (addr) {
-      const road = addr.road || '';
-      const houseNumber = addr.house_number || '';
-      
-      if (road) {
-        formattedAddress = houseNumber 
-          ? `${road}, ${houseNumber}` 
-          : road;
-      }
-    }
-
-    setEditAddress(formattedAddress);
-    setEditLatitude(parseFloat(suggestion.lat));
-    setEditLongitude(parseFloat(suggestion.lon));
-    setSuggestions([]);
-  };
-
   const handleStartEdit = (item: DeliveryItem) => {
     isEditingRef.current = true;
-    setIsSelectingSuggestion(false);
     setEditingId(item.id);
     setEditRecipient(item.recipient_name);
     setEditAddress(item.address || '');
@@ -144,14 +72,11 @@ export default function SupervisorPage() {
     setEditLongitude(item.lng ?? null);
     setEditTrackingCode(item.tracking_code);
     setEditStatus(item.status);
-    setSuggestions([]);
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
     isEditingRef.current = false;
-    setIsSelectingSuggestion(false);
-    setSuggestions([]);
   };
 
   const handleSaveEdit = async (id: string) => {
@@ -162,8 +87,8 @@ export default function SupervisorPage() {
         body: JSON.stringify({
           recipient_name: editRecipient,
           address: editAddress,
-          latitude: editLatitude, // Virá null se o supervisor digitou/apagou manualmente
-          longitude: editLongitude, // Virá null se o supervisor digitou/apagou manualmente
+          latitude: editLatitude, // Será null, forçando a string pura
+          longitude: editLongitude, // Será null, forçando a string pura
           tracking_code: editTrackingCode,
           status: editStatus,
         }),
@@ -172,7 +97,6 @@ export default function SupervisorPage() {
       if (res.ok) {
         setEditingId(null);
         isEditingRef.current = false;
-        setIsSelectingSuggestion(false);
         fetchDeliveries(true);
       } else {
         alert('Erro ao atualizar entrega.');
@@ -272,46 +196,15 @@ export default function SupervisorPage() {
                           </div>
                         </div>
 
-                        <div className="relative">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase">Endereço com Busca GPS</label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              value={editAddress}
-                              onChange={(e) => handleAddressChange(e.target.value)}
-                              className="w-full text-xs p-2 pr-8 border border-slate-300 rounded-lg bg-white text-slate-900"
-                              placeholder="Digite o novo endereço..."
-                            />
-                            {isSearchingAddress && (
-                              <div className="absolute right-2 top-2.5">
-                                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Sugestões de Endereço */}
-                          {suggestions.length > 0 && (
-                            <ul className="absolute z-10 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto divide-y divide-slate-100">
-                              {suggestions.map((suggestion) => (
-                                <li
-                                  key={suggestion.place_id}
-                                  onClick={() => handleSelectSuggestion(suggestion)}
-                                  className="p-3 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer flex items-start gap-2"
-                                >
-                                  <MapPin className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
-                                  <span>{suggestion.display_name}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-
-                          {/* Exibição das coordenadas encontradas na edição */}
-                          {editLatitude !== null && editLongitude !== null && (
-                            <div className="mt-1.5 p-2 bg-slate-100 rounded-lg text-[11px] font-mono text-slate-600 flex items-center gap-1.5">
-                              <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-                              <span>GPS Atualizado: {editLatitude.toFixed(6)}, {editLongitude.toFixed(6)}</span>
-                            </div>
-                          )}
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase">Endereço (Texto Livre)</label>
+                          <input
+                            type="text"
+                            value={editAddress}
+                            onChange={(e) => handleAddressChange(e.target.value)}
+                            className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900"
+                            placeholder="Digite o endereço..."
+                          />
                         </div>
 
                         <div className="flex justify-end gap-2 pt-2">
