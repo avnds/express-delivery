@@ -9,10 +9,11 @@ export async function GET(request: Request) {
   }
 
   try {
+    // Adicionamos countrycodes=br para priorizar resultados no Brasil e dedupe=1 para evitar duplicados
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
         query
-      )}&limit=5&addressdetails=1`,
+      )}&limit=5&addressdetails=1&countrycodes=br&dedupe=1`,
       {
         headers: {
           'User-Agent': 'ExpressDeliveryApp/1.0 (contact@expressdelivery.com)',

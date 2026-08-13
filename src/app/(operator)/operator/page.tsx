@@ -8,6 +8,14 @@ interface AddressSuggestion {
   display_name: string;
   lat: string;
   lon: string;
+  address?: {
+    road?: string;
+    house_number?: string;
+    suburb?: string;
+    city?: string;
+    town?: string;
+    municipality?: string;
+  };
 }
 
 export default function OperatorPage() {
@@ -54,7 +62,22 @@ export default function OperatorPage() {
   };
 
   const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
-    setAddress(suggestion.display_name);
+    const addr = suggestion.address;
+
+    // Se o Nominatim retornou os detalhes estruturados, montamos o texto amigável com número
+    if (addr && addr.road) {
+      const street = addr.road;
+      const number = addr.house_number ? `, ${addr.house_number}` : '';
+      const neighborhood = addr.suburb ? ` - ${addr.suburb}` : '';
+      const city = addr.city || addr.town || addr.municipality;
+      const cityText = city ? ` (${city})` : '';
+
+      const formattedAddress = `${street}${number}${neighborhood}${cityText}`;
+      setAddress(formattedAddress);
+    } else {
+      setAddress(suggestion.display_name);
+    }
+
     setLatitude(parseFloat(suggestion.lat));
     setLongitude(parseFloat(suggestion.lon));
     setSuggestions([]);
@@ -155,7 +178,7 @@ export default function OperatorPage() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Digite a rua, bairro, cidade..."
+                placeholder="Ex: Rua Firmino Rocha Aguiar, 1835 - Fortaleza"
                 value={address}
                 onChange={(e) => handleAddressChange(e.target.value)}
                 className="w-full text-xs p-3 pr-10 border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
