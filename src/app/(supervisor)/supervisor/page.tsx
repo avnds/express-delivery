@@ -47,6 +47,7 @@ export default function SupervisorPage() {
   // Estados para sugestões de endereço no Supervisor
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [isSelectingSuggestion, setIsSelectingSuggestion] = useState(false);
 
   const fetchDeliveries = useCallback(async (isSilent = false) => {
     if (isEditingRef.current) return;
@@ -77,6 +78,7 @@ export default function SupervisorPage() {
 
   // Debounce para a busca de endereço GPS na edição
   useEffect(() => {
+    if (isSelectingSuggestion) return;
     if (editAddress.trim().length < 3 || editLatitude !== null) {
       setSuggestions([]);
       return;
@@ -98,15 +100,17 @@ export default function SupervisorPage() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [editAddress, editLatitude]);
+  }, [editAddress, editLatitude, isSelectingSuggestion]);
 
   const handleAddressChange = (value: string) => {
+    setIsSelectingSuggestion(false);
     setEditAddress(value);
     setEditLatitude(null);
     setEditLongitude(null);
   };
 
   const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
+    setIsSelectingSuggestion(true);
     const addr = suggestion.address;
 
     if (addr && addr.road) {
@@ -129,6 +133,7 @@ export default function SupervisorPage() {
 
   const handleStartEdit = (item: DeliveryItem) => {
     isEditingRef.current = true;
+    setIsSelectingSuggestion(false);
     setEditingId(item.id);
     setEditRecipient(item.recipient_name);
     setEditAddress(item.address || '');
@@ -142,6 +147,7 @@ export default function SupervisorPage() {
   const handleCancelEdit = () => {
     setEditingId(null);
     isEditingRef.current = false;
+    setIsSelectingSuggestion(false);
     setSuggestions([]);
   };
 
@@ -163,6 +169,7 @@ export default function SupervisorPage() {
       if (res.ok) {
         setEditingId(null);
         isEditingRef.current = false;
+        setIsSelectingSuggestion(false);
         fetchDeliveries(true);
       } else {
         alert('Erro ao atualizar entrega.');
