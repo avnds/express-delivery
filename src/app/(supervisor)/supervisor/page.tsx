@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Shield, Loader2, Edit3, Check, X, MapPin } from 'lucide-react';
+import { Shield, Loader2, Edit3, Check, X, Phone, MessageSquare } from 'lucide-react';
 
 interface DeliveryItem {
   id: string;
@@ -11,6 +11,7 @@ interface DeliveryItem {
   lat: number | null;
   lng: number | null;
   status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
+  phone?: string | null;
 }
 
 export default function SupervisorPage() {
@@ -28,6 +29,7 @@ export default function SupervisorPage() {
   const [editLongitude, setEditLongitude] = useState<number | null>(null);
   const [editTrackingCode, setEditTrackingCode] = useState('');
   const [editStatus, setEditStatus] = useState<DeliveryItem['status']>('PENDING');
+  const [editPhone, setEditPhone] = useState('');
 
   const fetchDeliveries = useCallback(async (isSilent = false) => {
     if (isEditingRef.current) return;
@@ -72,6 +74,7 @@ export default function SupervisorPage() {
     setEditLongitude(item.lng ?? null);
     setEditTrackingCode(item.tracking_code);
     setEditStatus(item.status);
+    setEditPhone(item.phone || '');
   };
 
   const handleCancelEdit = () => {
@@ -91,6 +94,7 @@ export default function SupervisorPage() {
           longitude: editLongitude, // Será null, forçando a string pura
           tracking_code: editTrackingCode,
           status: editStatus,
+          phone: editPhone,
         }),
       });
 
@@ -162,7 +166,7 @@ export default function SupervisorPage() {
                   <div key={item.id} className="p-4 hover:bg-slate-50 transition">
                     {isEditing ? (
                       <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                           <div>
                             <label className="text-[10px] font-bold text-slate-500 uppercase">Cód. Rastreio</label>
                             <input
@@ -178,6 +182,16 @@ export default function SupervisorPage() {
                               type="text"
                               value={editRecipient}
                               onChange={(e) => setEditRecipient(e.target.value)}
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase">Telefone / WhatsApp</label>
+                            <input
+                              type="text"
+                              value={editPhone}
+                              onChange={(e) => setEditPhone(e.target.value)}
+                              placeholder="(00) 00000-0000"
                               className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900"
                             />
                           </div>
@@ -234,6 +248,33 @@ export default function SupervisorPage() {
                             <span className="text-xs font-bold text-slate-900">{item.recipient_name}</span>
                           </div>
                           <p className="text-xs text-slate-500">{item.address || 'Sem endereço informado'}</p>
+                          
+                          {/* Exibição e botões de contato se houver telefone */}
+                          {item.phone && (
+                            <div className="flex items-center gap-3 pt-1">
+                              <span className="text-[11px] text-slate-600 font-medium">Tel: {item.phone}</span>
+                              <div className="flex items-center gap-1.5">
+                                <a
+                                  href={`tel:${item.phone}`}
+                                  className="px-2 py-0.5 text-[10px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md flex items-center gap-1 transition"
+                                  title="Ligar"
+                                >
+                                  <Phone className="h-3 w-3 text-slate-600" />
+                                  Ligar
+                                </a>
+                                <a
+                                  href={`https://wa.me/55${item.phone.replace(/\D/g, '')}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-2 py-0.5 text-[10px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md flex items-center gap-1 shadow-sm transition"
+                                  title="WhatsApp"
+                                >
+                                  <MessageSquare className="h-3 w-3" />
+                                  WhatsApp
+                                </a>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-3">

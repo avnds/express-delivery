@@ -14,7 +14,8 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { tracking_code, recipient_name, address, latitude, longitude } = body;
+    // 1. Adicionamos o 'phone' na desestruturação do corpo da requisição
+    const { tracking_code, recipient_name, address, latitude, longitude, phone } = body;
 
     if (!tracking_code || !recipient_name) {
       return NextResponse.json(
@@ -29,12 +30,13 @@ export async function POST(request: Request) {
     const safeLat = typeof latitude === 'number' && !isNaN(latitude) ? latitude : null;
     const safeLng = typeof longitude === 'number' && !isNaN(longitude) ? longitude : null;
     const safeAddress = address || '';
+    const safePhone = phone || null; // 2. Tratamento seguro para o telefone
 
-    // Mapeado exatamente para as colunas 'lat' e 'lng' do seu schema
+    // 3. Incluímos a coluna 'phone' no SQL e o 'safePhone' nos argumentos
     await db.execute({
-      sql: `INSERT INTO deliveries (id, tracking_code, recipient_name, address, lat, lng, status) 
-            VALUES (?, ?, ?, ?, ?, ?, 'PENDING')`,
-      args: [id, tracking_code, recipient_name, safeAddress, safeLat, safeLng],
+      sql: `INSERT INTO deliveries (id, tracking_code, recipient_name, phone, address, lat, lng, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
+      args: [id, tracking_code, recipient_name, safePhone, safeAddress, safeLat, safeLng],
     });
 
     return NextResponse.json({ message: 'Entrega criada com sucesso!', id }, { status: 201 });

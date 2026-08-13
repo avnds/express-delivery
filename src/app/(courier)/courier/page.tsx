@@ -12,6 +12,7 @@ interface Delivery {
   lat?: number | string;
   lng?: number | string;
   status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED';
+  phone?: string | null; // Adicionado o campo phone
 }
 
 export default function CourierPage() {
@@ -108,6 +109,7 @@ export default function CourierPage() {
               lat={delivery.lat ? Number(delivery.lat) : undefined}
               lng={delivery.lng ? Number(delivery.lng) : undefined}
               status={delivery.status}
+              phone={delivery.phone} // Repassando o telefone para o card
               onUpdateStatus={handleUpdateStatus}
             />
           ))

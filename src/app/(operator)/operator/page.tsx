@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
+import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package, Clock, Truck, CheckCircle, Phone, MessageSquare } from 'lucide-react';
 
 interface AddressSuggestion {
   place_id: number;
@@ -26,6 +26,7 @@ interface Delivery {
   lat: number | null;
   lng: number | null;
   status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
+  phone?: string | null;
   created_at: string;
 }
 
@@ -33,6 +34,7 @@ export default function OperatorPage() {
   // Estados do Formulário
   const [trackingCode, setTrackingCode] = useState('');
   const [recipientName, setRecipientName] = useState('');
+  const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
@@ -133,6 +135,7 @@ export default function OperatorPage() {
         body: JSON.stringify({
           tracking_code: trackingCode,
           recipient_name: recipientName,
+          phone,
           address,
           latitude,
           longitude,
@@ -143,6 +146,7 @@ export default function OperatorPage() {
         setSuccessMessage('Entrega cadastrada com sucesso!');
         setTrackingCode('');
         setRecipientName('');
+        setPhone('');
         setAddress('');
         setLatitude(null);
         setLongitude(null);
@@ -293,6 +297,19 @@ export default function OperatorPage() {
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Telefone / WhatsApp
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: (85) 99999-9999"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full text-xs p-3 border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              </div>
+
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                   Endereço com Busca GPS
@@ -381,7 +398,7 @@ export default function OperatorPage() {
                   <thead>
                     <tr className="border-b border-slate-100 text-slate-400 uppercase text-[10px] tracking-wider">
                       <th className="py-3 px-2">Código</th>
-                      <th className="py-3 px-2">Destinatário</th>
+                      <th className="py-3 px-2">Destinatário & Contato</th>
                       <th className="py-3 px-2">Endereço</th>
                       <th className="py-3 px-2 text-center">Status</th>
                     </tr>
@@ -392,8 +409,33 @@ export default function OperatorPage() {
                         <td className="py-3 px-2 font-mono font-bold text-slate-900">
                           {item.tracking_code}
                         </td>
-                        <td className="py-3 px-2 font-medium text-slate-800">
-                          {item.recipient_name}
+                        <td className="py-3 px-2">
+                          <div className="font-medium text-slate-800">{item.recipient_name}</div>
+                          {item.phone ? (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[11px] text-slate-500">{item.phone}</span>
+                              <div className="flex items-center gap-1">
+                                <a
+                                  href={`tel:${item.phone}`}
+                                  className="p-1 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded transition"
+                                  title="Ligar"
+                                >
+                                  <Phone className="h-3 w-3" />
+                                </a>
+                                <a
+                                  href={`https://wa.me/55${item.phone.replace(/\D/g, '')}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1 text-white bg-emerald-600 hover:bg-emerald-700 rounded transition"
+                                  title="WhatsApp"
+                                >
+                                  <MessageSquare className="h-3 w-3" />
+                                </a>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">Sem telefone</span>
+                          )}
                         </td>
                         <td className="py-3 px-2 max-w-xs truncate text-slate-500" title={item.address}>
                           {item.address || '—'}

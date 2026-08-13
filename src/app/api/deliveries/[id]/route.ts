@@ -8,7 +8,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { recipient_name, address, latitude, longitude, tracking_code, status } = body;
+    const { recipient_name, address, latitude, longitude, tracking_code, status, phone } = body;
 
     // Busca a entrega atual para manter os dados que não forem alterados
     const currentDelivery = await db.execute({
@@ -32,10 +32,11 @@ export async function PATCH(
 
     const updatedTrackingCode = tracking_code ?? item.tracking_code;
     const updatedStatus = status ?? item.status;
+    const updatedPhone = phone !== undefined ? phone : item.phone;
 
     await db.execute({
       sql: `UPDATE deliveries 
-            SET recipient_name = ?, address = ?, lat = ?, lng = ?, tracking_code = ?, status = ? 
+            SET recipient_name = ?, address = ?, lat = ?, lng = ?, tracking_code = ?, status = ?, phone = ? 
             WHERE id = ?`,
       args: [
         updatedRecipientName, 
@@ -44,6 +45,7 @@ export async function PATCH(
         updatedLng, 
         updatedTrackingCode, 
         updatedStatus, 
+        updatedPhone,
         id
       ],
     });
