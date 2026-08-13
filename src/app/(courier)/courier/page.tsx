@@ -12,7 +12,9 @@ interface Delivery {
   lat?: number | string;
   lng?: number | string;
   status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED';
-  phone?: string | null; // Adicionado o campo phone
+  phone?: string | null;
+  completion_notes?: string | null;
+  delivery_fee?: number | null;
 }
 
 export default function CourierPage() {
@@ -25,7 +27,9 @@ export default function CourierPage() {
       const res = await fetch('/api/deliveries', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        setDeliveries(data.filter((d: Delivery) => d.status !== 'DELIVERED' && d.status !== ('CANCELLED' as any)));
+        // Nota: se quiser listar entregas já finalizadas para permitir a reedição rápida no card, 
+        // você pode ajustar o filtro aqui conforme sua necessidade operacional.
+        setDeliveries(data.filter((d: Delivery) => d.status !== ('CANCELLED' as any)));
       }
     } catch (error) {
       console.error('Erro ao carregar entregas do entregador:', error);
@@ -46,12 +50,19 @@ export default function CourierPage() {
     return () => clearInterval(interval);
   }, [fetchDeliveries]);
 
-  const handleUpdateStatus = async (id: string, newStatus: 'IN_TRANSIT' | 'DELIVERED') => {
+  const handleUpdateStatus = async (
+    id: string, 
+    newStatus: 'IN_TRANSIT' | 'DELIVERED', 
+    extraData?: { completion_notes?: string; delivery_fee?: number }
+  ) => {
     try {
       const res = await fetch(`/api/deliveries/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ 
+          status: newStatus,
+          ...extraData 
+        }),
       });
 
       if (res.ok) {
@@ -96,7 +107,7 @@ export default function CourierPage() {
           </div>
         ) : deliveries.length === 0 ? (
           <div className="bg-white p-8 rounded-2xl text-center text-slate-400 text-xs font-medium border border-slate-200">
-            Nenhuma entrega pendente na sua fila!
+            Nenhuma entrega encontrada!
           </div>
         ) : (
           deliveries.map((delivery) => (
@@ -109,7 +120,9 @@ export default function CourierPage() {
               lat={delivery.lat ? Number(delivery.lat) : undefined}
               lng={delivery.lng ? Number(delivery.lng) : undefined}
               status={delivery.status}
-              phone={delivery.phone} // Repassando o telefone para o card
+              phone={delivery.phone}
+              completionNotes={delivery.completion_notes}
+              deliveryFee={delivery.delivery_fee}
               onUpdateStatus={handleUpdateStatus}
             />
           ))

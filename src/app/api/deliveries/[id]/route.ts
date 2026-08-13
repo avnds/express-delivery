@@ -8,7 +8,17 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { recipient_name, address, latitude, longitude, tracking_code, status, phone } = body;
+    const { 
+      recipient_name, 
+      address, 
+      latitude, 
+      longitude, 
+      tracking_code, 
+      status, 
+      phone,
+      completion_notes,
+      delivery_fee 
+    } = body;
 
     // Busca a entrega atual para manter os dados que não forem alterados
     const currentDelivery = await db.execute({
@@ -26,7 +36,7 @@ export async function PATCH(
     const updatedAddress = address ?? item.address;
     
     // Se latitude/longitude vierem explicitamente como null, salvamos null. 
-    // Se vierem undefined (não enviados, como em alteração rápida de status), mantemos o atual.
+    // Se vierem undefined (não enviados), mantemos o atual.
     const updatedLat = latitude !== undefined ? latitude : item.lat;
     const updatedLng = longitude !== undefined ? longitude : item.lng;
 
@@ -34,9 +44,15 @@ export async function PATCH(
     const updatedStatus = status ?? item.status;
     const updatedPhone = phone !== undefined ? phone : item.phone;
 
+    // A descrição de finalização só muda se vier explicitamente no payload; caso contrário, preserva o atual
+    const updatedCompletionNotes = completion_notes !== undefined ? completion_notes : item.completion_notes;
+
+    // O valor da taxa pago ao entregador (pode ser atualizado por supervisor ou entregador na finalização)
+    const updatedDeliveryFee = delivery_fee !== undefined ? delivery_fee : item.delivery_fee;
+
     await db.execute({
       sql: `UPDATE deliveries 
-            SET recipient_name = ?, address = ?, lat = ?, lng = ?, tracking_code = ?, status = ?, phone = ? 
+            SET recipient_name = ?, address = ?, lat = ?, lng = ?, tracking_code = ?, status = ?, phone = ?, completion_notes = ?, delivery_fee = ?
             WHERE id = ?`,
       args: [
         updatedRecipientName, 
@@ -46,6 +62,8 @@ export async function PATCH(
         updatedTrackingCode, 
         updatedStatus, 
         updatedPhone,
+        updatedCompletionNotes,
+        updatedDeliveryFee,
         id
       ],
     });

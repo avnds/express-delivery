@@ -1,6 +1,7 @@
 'use client';
 
-import { MapPin, Navigation, CheckCircle2, Phone, MessageCircle } from 'lucide-react';
+import { useState } from 'react';
+import { MapPin, Navigation, CheckCircle2, Phone, MessageCircle, Edit3, Save, X } from 'lucide-react';
 
 interface CourierDeliveryCardProps {
   id: string;
@@ -11,7 +12,9 @@ interface CourierDeliveryCardProps {
   lng?: number;
   status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED';
   phone?: string | null;
-  onUpdateStatus: (id: string, newStatus: 'IN_TRANSIT' | 'DELIVERED') => void;
+  completionNotes?: string | null;
+  deliveryFee?: number | null;
+  onUpdateStatus: (id: string, newStatus: 'IN_TRANSIT' | 'DELIVERED', extraData?: { completion_notes?: string; delivery_fee?: number }) => void;
 }
 
 export function CourierDeliveryCard({
@@ -23,8 +26,14 @@ export function CourierDeliveryCard({
   lng,
   status,
   phone,
+  completionNotes,
+  deliveryFee,
   onUpdateStatus,
 }: CourierDeliveryCardProps) {
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [notesInput, setNotesInput] = useState(completionNotes || '');
+  const [feeInput, setFeeInput] = useState(deliveryFee !== undefined && deliveryFee !== null ? String(deliveryFee) : '');
+
   const handleOpenGPS = () => {
     if (lat && lng) {
       window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
@@ -34,6 +43,14 @@ export function CourierDeliveryCard({
   };
 
   const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
+
+  const handleSaveDelivery = (targetStatus: 'IN_TRANSIT' | 'DELIVERED' = 'DELIVERED') => {
+    onUpdateStatus(id, targetStatus, {
+      completion_notes: notesInput,
+      delivery_fee: feeInput ? parseFloat(feeInput) : 0,
+    });
+    setIsCompleting(false);
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-4">
@@ -86,6 +103,62 @@ export function CourierDeliveryCard({
             </div>
           </div>
         )}
+
+        {/* Exibição de dados de finalização se já estiver entregue e não estiver editando */}
+        {status === 'DELIVERED' && !isCompleting && (
+          <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3 space-y-1 mt-2 text-xs">
+            <div className="flex justify-between items-center text-emerald-900">
+              <span className="font-semibold">Recebedor/Obs:</span>
+              <span className="font-mono text-slate-700">{completionNotes || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between items-center text-emerald-900">
+              <span className="font-semibold">Valor da Entrega:</span>
+              <span className="font-bold text-emerald-700">R$ {Number(deliveryFee || 0).toFixed(2)}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Formulário de conclusão / reedição */}
+        {isCompleting && (
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-3 mt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800">Finalizar / Editar Entrega</span>
+              <button onClick={() => setIsCompleting(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-2">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Nome Recebedor / Código</label>
+                <input
+                  type="text"
+                  placeholder="Ex: João (Portaria) ou Cod 123"
+                  value={notesInput}
+                  onChange={(e) => setNotesInput(e.target.value)}
+                  className="w-full text-xs px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Valor da Entrega (R$)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={feeInput}
+                  onChange={(e) => setFeeInput(e.target.value)}
+                  className="w-full text-xs px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <button
+                onClick={() => handleSaveDelivery('DELIVERED')}
+                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 transition shadow"
+              >
+                <Save className="h-3.5 w-3.5" />
+                <span>Salvar e Concluir</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
@@ -106,13 +179,23 @@ export function CourierDeliveryCard({
           </button>
         )}
 
-        {status === 'IN_TRANSIT' && (
+        {status === 'IN_TRANSIT' && !isCompleting && (
           <button
-            onClick={() => onUpdateStatus(id, 'DELIVERED')}
+            onClick={() => setIsCompleting(true)}
             className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition shadow-md shadow-emerald-600/20"
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
             <span>Concluir</span>
+          </button>
+        )}
+
+        {status === 'DELIVERED' && !isCompleting && (
+          <button
+            onClick={() => setIsCompleting(true)}
+            className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition shadow-sm"
+          >
+            <Edit3 className="h-3.5 w-3.5" />
+            <span>Editar Finalização</span>
           </button>
         )}
       </div>

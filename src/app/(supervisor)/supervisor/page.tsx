@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Shield, Loader2, Edit3, Check, X, Phone, MessageSquare } from 'lucide-react';
+import { Shield, Loader2, Edit3, Check, X, Phone, MessageSquare, DollarSign } from 'lucide-react';
 
 interface DeliveryItem {
   id: string;
@@ -12,6 +12,8 @@ interface DeliveryItem {
   lng: number | null;
   status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
   phone?: string | null;
+  completion_notes?: string | null;
+  delivery_fee?: number | null;
 }
 
 export default function SupervisorPage() {
@@ -30,6 +32,7 @@ export default function SupervisorPage() {
   const [editTrackingCode, setEditTrackingCode] = useState('');
   const [editStatus, setEditStatus] = useState<DeliveryItem['status']>('PENDING');
   const [editPhone, setEditPhone] = useState('');
+  const [editDeliveryFee, setEditDeliveryFee] = useState('');
 
   const fetchDeliveries = useCallback(async (isSilent = false) => {
     if (isEditingRef.current) return;
@@ -75,6 +78,7 @@ export default function SupervisorPage() {
     setEditTrackingCode(item.tracking_code);
     setEditStatus(item.status);
     setEditPhone(item.phone || '');
+    setEditDeliveryFee(item.delivery_fee !== undefined && item.delivery_fee !== null ? String(item.delivery_fee) : '');
   };
 
   const handleCancelEdit = () => {
@@ -90,11 +94,13 @@ export default function SupervisorPage() {
         body: JSON.stringify({
           recipient_name: editRecipient,
           address: editAddress,
-          latitude: editLatitude, // Será null, forçando a string pura
-          longitude: editLongitude, // Será null, forçando a string pura
+          latitude: editLatitude,
+          longitude: editLongitude,
           tracking_code: editTrackingCode,
           status: editStatus,
           phone: editPhone,
+          delivery_fee: editDeliveryFee !== '' ? parseFloat(editDeliveryFee) : 0,
+          // Nota: O completion_notes não é enviado aqui, logo o backend preserva o que o entregador salvou!
         }),
       });
 
@@ -166,7 +172,7 @@ export default function SupervisorPage() {
                   <div key={item.id} className="p-4 hover:bg-slate-50 transition">
                     {isEditing ? (
                       <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
                           <div>
                             <label className="text-[10px] font-bold text-slate-500 uppercase">Cód. Rastreio</label>
                             <input
@@ -193,6 +199,17 @@ export default function SupervisorPage() {
                               onChange={(e) => setEditPhone(e.target.value)}
                               placeholder="(00) 00000-0000"
                               className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase">Valor da Entrega (R$)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={editDeliveryFee}
+                              onChange={(e) => setEditDeliveryFee(e.target.value)}
+                              placeholder="0.00"
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900 font-bold text-emerald-700"
                             />
                           </div>
                           <div>
@@ -241,11 +258,20 @@ export default function SupervisorPage() {
                     ) : (
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-mono font-bold text-xs bg-slate-100 text-slate-800 px-2 py-0.5 rounded">
                               {item.tracking_code}
                             </span>
                             <span className="text-xs font-bold text-slate-900">{item.recipient_name}</span>
+                            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-0.5 border border-emerald-100">
+                              <DollarSign className="h-3 w-3" />
+                              {Number(item.delivery_fee || 0).toFixed(2)}
+                            </span>
+                            {item.completion_notes && (
+                              <span className="text-[11px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded italic">
+                                Obs/Recebedor: {item.completion_notes}
+                              </span>
+                            )}
                           </div>
                           <p className="text-xs text-slate-500">{item.address || 'Sem endereço informado'}</p>
                           

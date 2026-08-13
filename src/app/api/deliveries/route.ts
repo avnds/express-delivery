@@ -14,8 +14,8 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    // 1. Adicionamos o 'phone' na desestruturação do corpo da requisição
-    const { tracking_code, recipient_name, address, latitude, longitude, phone } = body;
+    // 1. Adicionamos o 'delivery_fee' junto aos campos da requisição
+    const { tracking_code, recipient_name, address, latitude, longitude, phone, delivery_fee } = body;
 
     if (!tracking_code || !recipient_name) {
       return NextResponse.json(
@@ -30,13 +30,16 @@ export async function POST(request: Request) {
     const safeLat = typeof latitude === 'number' && !isNaN(latitude) ? latitude : null;
     const safeLng = typeof longitude === 'number' && !isNaN(longitude) ? longitude : null;
     const safeAddress = address || '';
-    const safePhone = phone || null; // 2. Tratamento seguro para o telefone
+    const safePhone = phone || null;
+    
+    // Tratamento seguro para a taxa de entrega (padrão 0.00 se não informado ou inválido)
+    const safeDeliveryFee = typeof delivery_fee === 'number' && !isNaN(delivery_fee) ? delivery_fee : (parseFloat(delivery_fee) || 0.00);
 
-    // 3. Incluímos a coluna 'phone' no SQL e o 'safePhone' nos argumentos
+    // 2. Incluímos a coluna 'delivery_fee' no INSERT SQL e o 'safeDeliveryFee' nos argumentos
     await db.execute({
-      sql: `INSERT INTO deliveries (id, tracking_code, recipient_name, phone, address, lat, lng, status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
-      args: [id, tracking_code, recipient_name, safePhone, safeAddress, safeLat, safeLng],
+      sql: `INSERT INTO deliveries (id, tracking_code, recipient_name, phone, address, lat, lng, status, delivery_fee) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?)`,
+      args: [id, tracking_code, recipient_name, safePhone, safeAddress, safeLat, safeLng, safeDeliveryFee],
     });
 
     return NextResponse.json({ message: 'Entrega criada com sucesso!', id }, { status: 201 });
