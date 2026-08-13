@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package, Clock, Truck, CheckCircle, Phone, MessageSquare } from 'lucide-react';
+import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package, Clock, Truck, CheckCircle, Phone, MessageSquare, DollarSign } from 'lucide-react';
 
 interface AddressSuggestion {
   place_id: number;
@@ -27,6 +27,7 @@ interface Delivery {
   lng: number | null;
   status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
   phone?: string | null;
+  delivery_fee?: number | null;
   created_at: string;
 }
 
@@ -36,6 +37,7 @@ export default function OperatorPage() {
   const [recipientName, setRecipientName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [deliveryFee, setDeliveryFee] = useState(''); // Novo estado para a taxa
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
@@ -139,6 +141,7 @@ export default function OperatorPage() {
           address,
           latitude,
           longitude,
+          delivery_fee: deliveryFee ? parseFloat(deliveryFee) : 0, // Enviando a taxa
         }),
       });
 
@@ -148,6 +151,7 @@ export default function OperatorPage() {
         setRecipientName('');
         setPhone('');
         setAddress('');
+        setDeliveryFee('');
         setLatitude(null);
         setLongitude(null);
         fetchDeliveries();
@@ -310,6 +314,26 @@ export default function OperatorPage() {
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Valor da Entrega (R$) *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <DollarSign className="h-4 w-4" />
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={deliveryFee}
+                    onChange={(e) => setDeliveryFee(e.target.value)}
+                    className="w-full text-xs p-3 pl-9 border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+              </div>
+
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                   Endereço com Busca GPS
@@ -400,6 +424,7 @@ export default function OperatorPage() {
                       <th className="py-3 px-2">Código</th>
                       <th className="py-3 px-2">Destinatário & Contato</th>
                       <th className="py-3 px-2">Endereço</th>
+                      <th className="py-3 px-2 text-center">Taxa (R$)</th>
                       <th className="py-3 px-2 text-center">Status</th>
                     </tr>
                   </thead>
@@ -439,6 +464,9 @@ export default function OperatorPage() {
                         </td>
                         <td className="py-3 px-2 max-w-xs truncate text-slate-500" title={item.address}>
                           {item.address || '—'}
+                        </td>
+                        <td className="py-3 px-2 text-center font-bold text-emerald-600">
+                          R$ {Number(item.delivery_fee || 0).toFixed(2)}
                         </td>
                         <td className="py-3 px-2 text-center">
                           {getStatusBadge(item.status)}
