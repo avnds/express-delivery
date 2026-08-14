@@ -37,7 +37,7 @@ export default function OperatorPage() {
   const [recipientName, setRecipientName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [deliveryFee, setDeliveryFee] = useState(''); // Novo estado para a taxa
+  const [deliveryFee, setDeliveryFee] = useState('');
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
@@ -53,7 +53,6 @@ export default function OperatorPage() {
 
   // Buscar entregas cadastradas
   const fetchDeliveries = async () => {
-    setIsLoadingDeliveries(true);
     try {
       const res = await fetch('/api/deliveries');
       if (res.ok) {
@@ -67,8 +66,18 @@ export default function OperatorPage() {
     }
   };
 
+  // Carrega ao iniciar a página
   useEffect(() => {
     fetchDeliveries();
+  }, []);
+
+  // Polling automático a cada 10 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchDeliveries();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Debounce para a busca de endereço GPS
@@ -141,7 +150,7 @@ export default function OperatorPage() {
           address,
           latitude,
           longitude,
-          delivery_fee: deliveryFee ? parseFloat(deliveryFee) : 0, // Enviando a taxa
+          delivery_fee: deliveryFee ? parseFloat(deliveryFee) : 0,
         }),
       });
 
