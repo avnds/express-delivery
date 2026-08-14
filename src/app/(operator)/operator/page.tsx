@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package, Clock, Truck, CheckCircle, Phone, MessageSquare, DollarSign } from 'lucide-react';
+import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package, Clock, Truck, CheckCircle, Phone, MessageSquare, DollarSign, FileText } from 'lucide-react';
 
 interface AddressSuggestion {
   place_id: number;
@@ -28,6 +28,7 @@ interface Delivery {
   status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
   phone?: string | null;
   delivery_fee?: number | null;
+  completion_notes?: string | null; // <-- Adicionado para capturar as observações
   created_at: string;
 }
 
@@ -435,6 +436,7 @@ export default function OperatorPage() {
                       <th className="py-3 px-2">Endereço</th>
                       <th className="py-3 px-2 text-center">Taxa (R$)</th>
                       <th className="py-3 px-2 text-center">Status</th>
+                      <th className="py-3 px-2">Observações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -479,6 +481,16 @@ export default function OperatorPage() {
                         </td>
                         <td className="py-3 px-2 text-center">
                           {getStatusBadge(item.status)}
+                        </td>
+                        <td className="py-3 px-2 max-w-xs">
+                          {item.completion_notes ? (
+                            <div className="flex items-start gap-1.5 bg-slate-100 p-2 rounded-lg text-slate-600" title={item.completion_notes}>
+                              <FileText className="h-3.5 w-3.5 text-blue-600 shrink-0 mt-0.5" />
+                              <span className="truncate text-[11px]">{item.completion_notes}</span>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">—</span>
+                          )}
                         </td>
                       </tr>
                     ))}
