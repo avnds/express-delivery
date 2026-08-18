@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package, Clock, Truck, CheckCircle, Phone, MessageSquare, DollarSign, FileText } from 'lucide-react';
+import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package, Clock, Truck, CheckCircle, Phone, MessageSquare, DollarSign, FileText, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface AddressSuggestion {
   place_id: number;
@@ -33,6 +34,7 @@ interface Delivery {
 }
 
 export default function OperatorPage() {
+  const router = useRouter();
   // Estados do Formulário
   const [trackingCode, setTrackingCode] = useState('');
   const [recipientName, setRecipientName] = useState('');
@@ -198,6 +200,17 @@ export default function OperatorPage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+    } finally {
+      router.push('/login');
+      router.refresh();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -214,13 +227,24 @@ export default function OperatorPage() {
             </div>
           </div>
 
-          <button
-            onClick={fetchDeliveries}
-            className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition self-start sm:self-auto"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoadingDeliveries ? 'animate-spin' : ''}`} />
-            <span>Atualizar Lista</span>
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              onClick={fetchDeliveries}
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoadingDeliveries ? 'animate-spin' : ''}`} />
+              <span>Atualizar Lista</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-white bg-slate-100 hover:bg-red-600 px-3 py-2 rounded-xl transition"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sair</span>
+            </button>
+          </div>
         </div>
 
         {/* Painel Resumo com Totais */}
