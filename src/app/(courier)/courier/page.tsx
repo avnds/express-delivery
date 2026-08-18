@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { CourierDeliveryCard } from '@/components/courier/CourierDeliveryCard';
-import { Truck, DollarSign, Loader2 } from 'lucide-react';
+//import { Truck, DollarSign, Loader2 } from 'lucide-react';
+import { Truck, DollarSign, Loader2, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Delivery {
   id: string;
@@ -18,6 +20,7 @@ interface Delivery {
 }
 
 export default function CourierPage() {
+  const router = useRouter();
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,6 +50,7 @@ export default function CourierPage() {
       fetchDeliveries(true);
     }, 4000);
 
+
     return () => clearInterval(interval);
   }, [fetchDeliveries]);
 
@@ -75,6 +79,17 @@ export default function CourierPage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+    } finally {
+      router.push('/login');
+      router.refresh();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 pb-12">
       <div className="bg-slate-900 text-white p-5 sticky top-0 z-40 shadow-md">
@@ -96,6 +111,14 @@ export default function CourierPage() {
             <DollarSign className="h-4 w-4" />
             <span>Ganhos</span>
           </a>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="p-2 bg-slate-800 hover:bg-red-600 rounded-xl text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1 transition"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sair</span>
+          </button>
         </div>
       </div>
 

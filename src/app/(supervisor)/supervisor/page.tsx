@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Shield, Loader2, Edit3, Check, X, Phone, MessageSquare, DollarSign, Trash2, Download } from 'lucide-react';
+import { Shield, Loader2, Edit3, Check, X, Phone, MessageSquare, DollarSign, Trash2, Download, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface DeliveryItem {
   id: string;
@@ -17,6 +18,7 @@ interface DeliveryItem {
 }
 
 export default function SupervisorPage() {
+  const router = useRouter();
   const [deliveries, setDeliveries] = useState<DeliveryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isClearing, setIsClearing] = useState(false);
@@ -186,6 +188,17 @@ export default function SupervisorPage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+    } finally {
+      router.push('/login');
+      router.refresh();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -217,6 +230,14 @@ export default function SupervisorPage() {
             >
               {isClearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               <span>Apagar Dados</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-3 py-2 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sair</span>
             </button>
           </div>
         </div>

@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  /*const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage('');
@@ -29,7 +29,65 @@ export default function LoginPage() {
       setErrorMessage('Ocorreu um erro ao tentar fazer login. Tente novamente.');
       setIsLoading(false);
     }
-  };
+  };*/
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setErrorMessage('');
+
+  try {
+    if (!email || !password) {
+      setErrorMessage('Preencha todos os campos.');
+      return;
+    }
+
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: email,
+        password,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setErrorMessage(data.error || 'Usuário ou senha inválidos.');
+      return;
+    }
+
+    if (data.user.mustChangePassword) {
+      router.push('/change-password');
+      return;
+    }
+
+    switch (data.user.role) {
+      case 'OPERATOR':
+        router.push('/operator');
+        break;
+
+      case 'SUPERVISOR':
+        router.push('/supervisor');
+        break;
+
+      case 'COURIER':
+        router.push('/courier');
+        break;
+
+      default:
+        setErrorMessage('Perfil de usuário inválido.');
+    }
+  } catch (error) {
+    console.error('Erro ao fazer login:', error);
+    setErrorMessage('Não foi possível conectar ao servidor.');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen w-full bg-slate-900 flex items-center justify-center p-4">
@@ -59,15 +117,15 @@ export default function LoginPage() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              E-mail
+              Usuário
             </label>
             <div className="relative">
               <input
-                type="email"
+                type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu.email@empresa.com"
+                placeholder="Digite seu usuário"
                 className="w-full pl-10 pr-4 py-3 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition outline-none text-slate-900 placeholder:text-slate-400"
               />
               <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
