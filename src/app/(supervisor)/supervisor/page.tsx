@@ -202,13 +202,19 @@ export default function SupervisorPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-[#FF6600] pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-red-600 text-white rounded-2xl shadow-md shadow-red-600/20">
-              <Shield className="h-6 w-6" />
+            <div className="p-1 bg-[#FFFFFF] text-white rounded-2xl shadow-md shadow-[#002B5C]/20">
+              <img
+                src="/ico android.png"
+                alt="Rotix"
+                className="h-10 w-10 object-contain"
+              />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Painel do Supervisor</h1>
+              <h1 className="text-2xl font-black text-[#002B5C] tracking-tight">
+                Painel do Supervisor
+              </h1>
               <p className="text-xs text-slate-500">Gerenciamento global e edição total das ordens de entrega</p>
             </div>
           </div>
@@ -217,7 +223,7 @@ export default function SupervisorPage() {
             <button
               onClick={handleExportTxt}
               disabled={isExporting}
-              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-sm disabled:opacity-50"
+              className="px-3 py-2 bg-[#002B5C] hover:bg-[#00234D] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-sm disabled:opacity-50"
             >
               {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               <span>Salvar Histórico (.txt)</span>
@@ -234,7 +240,7 @@ export default function SupervisorPage() {
             <button
               type="button"
               onClick={handleLogout}
-              className="px-3 py-2 bg-slate-100 hover:bg-red-600 text-slate-600 hover:text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition"
+              className="px-3 py-2 bg-slate-100 hover:bg-[#002B5C] text-slate-600 hover:text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition"
             >
               <LogOut className="h-4 w-4" />
               <span>Sair</span>
@@ -249,7 +255,7 @@ export default function SupervisorPage() {
 
           {isLoading ? (
             <div className="p-8 flex items-center justify-center text-slate-400 text-xs gap-2">
-              <Loader2 className="h-5 w-5 animate-spin text-red-600" />
+              <Loader2 className="h-5 w-5 animate-spin text-[#002B5C]" />
               <span>Carregando dados do banco...</span>
             </div>
           ) : deliveries.length === 0 ? (
@@ -270,7 +276,7 @@ export default function SupervisorPage() {
                               type="text"
                               value={editTrackingCode}
                               onChange={(e) => setEditTrackingCode(e.target.value)}
-                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white font-mono text-slate-900"
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
                             />
                           </div>
                           <div>
@@ -279,7 +285,7 @@ export default function SupervisorPage() {
                               type="text"
                               value={editRecipient}
                               onChange={(e) => setEditRecipient(e.target.value)}
-                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900"
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
                             />
                           </div>
                           <div>
@@ -289,7 +295,7 @@ export default function SupervisorPage() {
                               value={editPhone}
                               onChange={(e) => setEditPhone(e.target.value)}
                               placeholder="(00) 00000-0000"
-                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900"
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
                             />
                           </div>
                           <div>
@@ -300,7 +306,7 @@ export default function SupervisorPage() {
                               value={editDeliveryFee}
                               onChange={(e) => setEditDeliveryFee(e.target.value)}
                               placeholder="0.00"
-                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900 font-bold text-emerald-700"
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
                             />
                           </div>
                           <div>
@@ -308,7 +314,7 @@ export default function SupervisorPage() {
                             <select
                               value={editStatus}
                               onChange={(e) => setEditStatus(e.target.value as DeliveryItem['status'])}
-                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white font-medium text-slate-900"
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
                             >
                               <option value="PENDING">PENDING</option>
                               <option value="IN_TRANSIT">IN_TRANSIT</option>
@@ -324,7 +330,7 @@ export default function SupervisorPage() {
                             type="text"
                             value={editAddress}
                             onChange={(e) => handleAddressChange(e.target.value)}
-                            className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900"
+                            className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
                             placeholder="Digite o endereço..."
                           />
                         </div>
@@ -339,7 +345,7 @@ export default function SupervisorPage() {
                           </button>
                           <button
                             onClick={() => handleSaveEdit(item.id)}
-                            className="px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg flex items-center gap-1 hover:bg-emerald-700 shadow-sm"
+                            className="px-3 py-1.5 text-xs font-semibold text-white bg-[#002B5C] rounded-lg flex items-center gap-1 hover:bg-[#00234D] shadow-sm"
                           >
                             <Check className="h-3.5 w-3.5" />
                             Salvar Alterações
@@ -397,7 +403,7 @@ export default function SupervisorPage() {
                           <select
                             value={item.status}
                             onChange={(e) => handleQuickStatusChange(item.id, e.target.value as DeliveryItem['status'])}
-                            className="text-xs border border-slate-300 rounded-xl px-3 py-1.5 bg-slate-50 font-medium text-slate-700 outline-none focus:ring-2 focus:ring-red-600"
+                            className="text-xs border border-slate-300 rounded-xl px-3 py-1.5 bg-slate-50 font-medium text-slate-700 outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
                           >
                             <option value="PENDING">PENDING</option>
                             <option value="IN_TRANSIT">IN_TRANSIT</option>
@@ -407,7 +413,7 @@ export default function SupervisorPage() {
 
                           <button
                             onClick={() => handleStartEdit(item)}
-                            className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition"
+                            className="p-2 text-slate-500 hover:text-[#002B5C] hover:bg-slate-100 rounded-xl transition"
                             title="Editar entrega"
                           >
                             <Edit3 className="h-4 w-4" />
