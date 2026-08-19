@@ -62,7 +62,7 @@ export function CourierDeliveryCard({
             status === 'PENDING'
               ? 'bg-amber-100 text-amber-800'
               : status === 'IN_TRANSIT'
-              ? 'bg-indigo-100 text-indigo-800'
+              ? 'bg-[#002B5C]/10 text-[#002B5C]'
               : 'bg-emerald-100 text-emerald-800'
           }`}
         >
@@ -74,7 +74,7 @@ export function CourierDeliveryCard({
         <div>
           <h3 className="font-bold text-slate-900 text-sm mb-1">{recipientName}</h3>
           <p className="text-xs text-slate-500 flex items-start gap-1.5 leading-relaxed">
-            <MapPin className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
+            <MapPin className="h-4 w-4 text-[#002B5C] shrink-0 mt-0.5" />
             <span>{address}</span>
           </p>
         </div>
@@ -134,12 +134,12 @@ export function CourierDeliveryCard({
                   placeholder="Ex: João (Portaria) ou Cod 123"
                   value={notesInput}
                   onChange={(e) => setNotesInput(e.target.value)}
-                  className="w-full text-xs px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400"
+                  className="w-full text-xs px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600] placeholder:text-slate-400"
                 />
               </div>
               <button
                 onClick={() => handleSaveDelivery('DELIVERED')}
-                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 transition shadow"
+                className="w-full py-2 bg-[#002B5C] hover:bg-[#00234D] text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 transition shadow"
               >
                 <Save className="h-3.5 w-3.5" />
                 <span>Salvar e Concluir</span>
@@ -154,14 +154,14 @@ export function CourierDeliveryCard({
           onClick={handleOpenGPS}
           className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition"
         >
-          <Navigation className="h-3.5 w-3.5 text-indigo-600" />
+          <Navigation className="h-3.5 w-3.5 text-[#002B5C]" />
           <span>GPS</span>
         </button>
 
         {status === 'PENDING' && (
           <button
             onClick={() => onUpdateStatus(id, 'IN_TRANSIT')}
-            className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition shadow-md shadow-indigo-600/20"
+            className="flex-1 py-2.5 bg-[#002B5C] hover:bg-[#00234D] text-white font-bold text-xs rounded-xl transition shadow-md shadow-indigo-600/20"
           >
             Coletar
           </button>
@@ -180,7 +180,7 @@ export function CourierDeliveryCard({
         {status === 'DELIVERED' && !isCompleting && (
           <button
             onClick={() => setIsCompleting(true)}
-            className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition shadow-sm"
+            className="flex-1 py-2.5 bg-[#002B5C] hover:bg-[#00234D] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition shadow-sm"
           >
             <Edit3 className="h-3.5 w-3.5" />
             <span>Editar Obs.</span>

@@ -90,22 +90,30 @@ export default function LoginPage() {
 };
 
   return (
-    <div className="min-h-screen w-full bg-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen w-full bg-[#002B5C] flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#FF6600]/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#002B5C]/30 rounded-full blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
-        <div className="bg-slate-900 p-8 text-center border-b border-slate-800">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 mb-4">
-            <Package className="h-7 w-7" />
+        <div className="bg-[#002B5C] p-8 text-center border-b-4 border-[#FF6600]">
+          <div className="inline-flex items-center justify-center w-70 h-15 rounded-2xl bg-[#FF6600] text-white shadow-lg shadow-black/20 mb-4">
+            <img
+              src="/banner 1.png"
+              alt="Rotix"
+              className="h-14 w-60 object-contain"
+            />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Express Delivery</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Plataforma Unificada de Gestão e Entregas
-          </p>
-        </div>
+
+        <h1 className="text-2xl font-black text-white tracking-tight">
+          Login
+        </h1>
+
+      <p className="text-xs text-white/70 mt-1">
+        Plataforma Unificada de Gestão e Entregas
+      </p>
+    </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-5">
           {errorMessage && (
@@ -126,7 +134,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Digite seu usuário"
-                className="w-full pl-10 pr-4 py-3 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition outline-none text-slate-900 placeholder:text-slate-400"
+                className="w-full pl-10 pr-4 py-3 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#FF6600] focus:border-[#FF6600] transition outline-none text-slate-900 placeholder:text-slate-400"
               />
               <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
             </div>
@@ -137,7 +145,7 @@ export default function LoginPage() {
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Senha
               </label>
-              <a href="#" className="text-xs text-indigo-600 font-semibold hover:underline">
+              <a href="#" className="text-xs text-[#002B5C] font-semibold hover:underline">
                 Esqueceu a senha?
               </a>
             </div>
@@ -148,7 +156,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition outline-none text-slate-900 placeholder:text-slate-400"
+                className="w-full pl-10 pr-4 py-3 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#FF6600] focus:border-[#FF6600] transition outline-none text-slate-900 placeholder:text-slate-400"
               />
               <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
             </div>
@@ -157,7 +165,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm transition shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3.5 bg-[#002B5C] hover:bg-[#00234D] active:bg-[#001B3D] text-white font-bold rounded-xl text-sm transition shadow-lg shadow-[#002B5C]/25 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {isLoading ? (
               <>

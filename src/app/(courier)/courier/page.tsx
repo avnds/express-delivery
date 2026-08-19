@@ -92,11 +92,15 @@ export default function CourierPage() {
 
   return (
     <div className="min-h-screen bg-slate-100 pb-12">
-      <div className="bg-slate-900 text-white p-5 sticky top-0 z-40 shadow-md">
+      <div className="bg-[#002B5C] text-white p-5 sticky top-0 z-40 shadow-md">
         <div className="max-w-md mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-indigo-600 rounded-xl">
-              <Truck className="h-5 w-5 text-white" />
+            <div className="p-1 bg-[#FFFFFF] rounded-xl shadow-md shadow-black/20">
+              <img
+                src="/ico android.png"
+                alt="Rotix"
+                className="h-10 w-10 object-contain"
+              />
             </div>
             <div>
               <h1 className="font-black text-sm tracking-tight">Fila de Entregas</h1>
@@ -106,7 +110,7 @@ export default function CourierPage() {
 
           <a
             href="/courier/earnings"
-            className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-emerald-400 text-xs font-bold flex items-center gap-1 transition"
+            className="p-2 bg-[#001B3D] hover:bg-[#00234D] rounded-xl text-emerald-400 text-xs font-bold flex items-center gap-1 transition"
           >
             <DollarSign className="h-4 w-4" />
             <span>Ganhos</span>
@@ -114,7 +118,7 @@ export default function CourierPage() {
           <button
             type="button"
             onClick={handleLogout}
-            className="p-2 bg-slate-800 hover:bg-red-600 rounded-xl text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1 transition"
+            className="p-2 bg-[#001B3D] hover:bg-[#002B5C] rounded-xl text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1 transition"
           >
             <LogOut className="h-4 w-4" />
             <span>Sair</span>
@@ -125,7 +129,7 @@ export default function CourierPage() {
       <div className="max-w-md mx-auto p-4 space-y-4">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center p-8 text-slate-400 text-xs gap-2">
-            <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-[#002B5C]" />
             <span>Buscando entregas disponíveis...</span>
           </div>
         ) : deliveries.length === 0 ? (

@@ -218,8 +218,12 @@ export default function OperatorPage() {
         {/* Cabeçalho da Página */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-md shadow-blue-600/20">
-              <PackagePlus className="h-6 w-6" />
+            <div className="p-1 bg-[#FFFFFF] text-white rounded-2xl shadow-md shadow-[#002B5C]/20">
+              <img
+                src="/ico android.png"
+                alt="Rotix"
+                className="h-10 w-10 object-contain"
+              />
             </div>
             <div>
               <h1 className="text-xl font-black text-slate-900">Painel do Operador</h1>
@@ -230,7 +234,7 @@ export default function OperatorPage() {
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
               onClick={fetchDeliveries}
-              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition"
+              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-[#FF6600] bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition"
             >
               <RefreshCw className={`h-4 w-4 ${isLoadingDeliveries ? 'animate-spin' : ''}`} />
               <span>Atualizar Lista</span>
@@ -415,7 +419,7 @@ export default function OperatorPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 bg-[#002B5C] hover:bg-[#00234D] text-white font-semibold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>

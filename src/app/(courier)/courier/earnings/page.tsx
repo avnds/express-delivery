@@ -73,7 +73,7 @@ export default function EarningsPage() {
 
   return (
     <div className="min-h-screen bg-slate-100 pb-12">
-      <div className="bg-slate-900 text-white p-5 sticky top-0 z-40 shadow-md">
+      <div className="bg-[#002B5C] text-white p-5 sticky top-0 z-40 shadow-md">
         <div className="max-w-md mx-auto flex items-center justify-between">
           <Link
             href="/courier"
