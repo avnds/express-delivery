@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Shield, Loader2, Edit3, Check, X, Phone, MessageSquare, DollarSign, Trash2, Download, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import UserManagement from '@/components/supervisor/UserManagement';
 
 interface DeliveryItem {
   id: string;
@@ -247,7 +248,7 @@ export default function SupervisorPage() {
             </button>
           </div>
         </div>
-
+        <UserManagement />
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-slate-100 font-bold text-xs text-slate-700 uppercase tracking-wider">
             Ordens Registradas ({deliveries.length})
