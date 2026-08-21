@@ -33,7 +33,7 @@ export default function EarningsPage() {
           
           // Mantém todas que não estão pendentes (inclui DELIVERED e CANCELLED)
           const validItems = data
-            .filter((item) => item.status !== 'PENDING')
+            .filter((item) => item.status === 'DELIVERED')
             .map((item) => {
               let formattedDate = 'Recentemente';
               if (item.created_at) {
