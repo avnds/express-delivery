@@ -27,7 +27,9 @@ export default function EarningsPage() {
   useEffect(() => {
     async function fetchEarnings() {
       try {
-        const res = await fetch('/api/deliveries', { cache: 'no-store' });
+        const res = await fetch('/api/courier/earnings', {
+          cache: 'no-store',
+        });
         if (res.ok) {
           const data: DeliveryItem[] = await res.json();
           

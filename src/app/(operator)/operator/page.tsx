@@ -19,6 +19,11 @@ interface AddressSuggestion {
   };
 }
 
+interface Courier {
+  id: string;
+  name: string;
+  username: string;
+}
 interface Delivery {
   id: string;
   tracking_code: string;
@@ -41,6 +46,10 @@ export default function OperatorPage() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [deliveryFee, setDeliveryFee] = useState('');
+  const [courierId, setCourierId] = useState('');
+  const [couriers, setCouriers] = useState<Courier[]>([]);
+  const [isLoadingCouriers, setIsLoadingCouriers] = useState(true);
+
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
@@ -73,6 +82,27 @@ export default function OperatorPage() {
   useEffect(() => {
     fetchDeliveries();
   }, []);
+
+  useEffect(() => {
+  const fetchCouriers = async () => {
+    try {
+      const res = await fetch('/api/users/couriers', {
+        cache: 'no-store',
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setCouriers(data);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar entregadores:', error);
+    } finally {
+      setIsLoadingCouriers(false);
+    }
+  };
+
+  fetchCouriers();
+}, []);
 
   // Polling automático a cada 10 segundos
   useEffect(() => {
@@ -147,13 +177,14 @@ export default function OperatorPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tracking_code: trackingCode,
-          recipient_name: recipientName,
-          phone,
-          address,
-          latitude,
-          longitude,
-          delivery_fee: deliveryFee ? parseFloat(deliveryFee) : 0,
+        tracking_code: trackingCode,
+        recipient_name: recipientName,
+        phone,
+        address,
+        latitude,
+        longitude,
+        delivery_fee: deliveryFee ? parseFloat(deliveryFee) : 0,
+        courier_id: courierId || null,
         }),
       });
 
@@ -164,6 +195,7 @@ export default function OperatorPage() {
         setPhone('');
         setAddress('');
         setDeliveryFee('');
+        setCourierId('');
         setLatitude(null);
         setLongitude(null);
         fetchDeliveries();
@@ -371,11 +403,41 @@ export default function OperatorPage() {
                   />
                 </div>
               </div>
-
-              <div className="relative">
+              
+              <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Endereço com Busca GPS
+                  Entregador
                 </label>
+
+                <select
+                  value={courierId}
+                  onChange={(e) => setCourierId(e.target.value)}
+                  disabled={isLoadingCouriers}
+                  className="w-full text-xs p-3 border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50"
+                >
+                  <option value="">
+                    {isLoadingCouriers
+                      ? 'Carregando entregadores...'
+                      : 'Todos os entregadores'}
+                  </option>
+
+                  {!isLoadingCouriers &&
+                    couriers.map((courier) => (
+                    <option key={courier.id} value={courier.id}>
+                      {courier.name}
+                    </option>
+                    ))}
+                </select>
+
+                <p className="mt-1 text-[10px] text-slate-400">
+                  Se nenhum entregador for selecionado, a entrega ficará disponível para todos.
+                </p>
+              </div>      
+
+            <div className="relative">
+              <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                Endereço com Busca GPS
+              </label>
                 <div className="relative">
                   <input
                     type="text"
