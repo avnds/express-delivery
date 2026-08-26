@@ -5,6 +5,12 @@ import { Shield, Loader2, Edit3, Check, X, Phone, MessageSquare, DollarSign, Tra
 import { useRouter } from 'next/navigation';
 import UserManagement from '@/components/supervisor/UserManagement';
 
+interface Courier {
+  id: string;
+  name: string;
+  username: string;
+}
+
 interface DeliveryItem {
   id: string;
   tracking_code: string;
@@ -16,6 +22,8 @@ interface DeliveryItem {
   phone?: string | null;
   completion_notes?: string | null;
   delivery_fee?: number | null;
+  courier_id?: string | null;
+  courier_name?: string | null;
 }
 
 export default function SupervisorPage() {
@@ -24,6 +32,8 @@ export default function SupervisorPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isClearing, setIsClearing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [couriers, setCouriers] = useState<Courier[]>([]);
+  const [isLoadingCouriers, setIsLoadingCouriers] = useState(true);
 
   // Ref para controlar se estamos editando (evita congelamento pelo polling)
   const isEditingRef = useRef(false);
@@ -38,6 +48,7 @@ export default function SupervisorPage() {
   const [editStatus, setEditStatus] = useState<DeliveryItem['status']>('PENDING');
   const [editPhone, setEditPhone] = useState('');
   const [editDeliveryFee, setEditDeliveryFee] = useState('');
+  const [editCourierId, setEditCourierId] = useState('');
 
   const fetchDeliveries = useCallback(async (isSilent = false) => {
     if (isEditingRef.current) return;
@@ -65,6 +76,27 @@ export default function SupervisorPage() {
 
     return () => clearInterval(interval);
   }, [fetchDeliveries]);
+
+  useEffect(() => {
+    const fetchCouriers = async () => {
+      try {
+        const res = await fetch('/api/users/couriers', {
+          cache: 'no-store',
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setCouriers(data);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar entregadores:', error);
+      } finally {
+        setIsLoadingCouriers(false);
+      }
+    };
+
+    fetchCouriers();
+  }, []);
 
   // Função para exportar o arquivo .txt
   const handleExportTxt = async () => {
@@ -133,6 +165,7 @@ export default function SupervisorPage() {
     setEditStatus(item.status);
     setEditPhone(item.phone || '');
     setEditDeliveryFee(item.delivery_fee !== undefined && item.delivery_fee !== null ? String(item.delivery_fee) : '');
+    setEditCourierId(item.courier_id || '');
   };
 
   const handleCancelEdit = () => {
@@ -154,6 +187,7 @@ export default function SupervisorPage() {
           status: editStatus,
           phone: editPhone,
           delivery_fee: editDeliveryFee !== '' ? parseFloat(editDeliveryFee) : 0,
+          courier_id: editCourierId || null,
         }),
       });
 
@@ -270,7 +304,7 @@ export default function SupervisorPage() {
                   <div key={item.id} className="p-4 hover:bg-slate-50 transition">
                     {isEditing ? (
                       <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3">
                           <div>
                             <label className="text-[10px] font-bold text-slate-500 uppercase">Cód. Rastreio</label>
                             <input
@@ -310,6 +344,27 @@ export default function SupervisorPage() {
                               className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
                             />
                           </div>
+
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase">
+                              Entregador
+                            </label>
+
+                            <select
+                              value={editCourierId}
+                              onChange={(e) => setEditCourierId(e.target.value)}
+                              className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
+                            >
+                              <option value="">Sem entregador</option>
+
+                              {couriers.map((courier) => (
+                                <option key={courier.id} value={courier.id}>
+                                  {courier.name} ({courier.username})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
                           <div>
                             <label className="text-[10px] font-bold text-slate-500 uppercase">Status</label>
                             <select
@@ -336,6 +391,10 @@ export default function SupervisorPage() {
                           />
                         </div>
 
+                      
+
+                        
+
                         <div className="flex justify-end gap-2 pt-2">
                           <button
                             onClick={handleCancelEdit}
@@ -361,6 +420,12 @@ export default function SupervisorPage() {
                               {item.tracking_code}
                             </span>
                             <span className="text-xs font-bold text-slate-900">{item.recipient_name}</span>
+                            {item.courier_name && (
+                              <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                                Entregador: {item.courier_name}
+                              </span>
+                            )}
+                            
                             <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-0.5 border border-emerald-100">
                               <DollarSign className="h-3 w-3" />
                               {Number(item.delivery_fee || 0).toFixed(2)}
@@ -373,6 +438,7 @@ export default function SupervisorPage() {
                           </div>
                           <p className="text-xs text-slate-500">{item.address || 'Sem endereço informado'}</p>
                           
+
                           {item.phone && (
                             <div className="flex items-center gap-3 pt-1">
                               <span className="text-[11px] text-slate-600 font-medium">Tel: {item.phone}</span>
