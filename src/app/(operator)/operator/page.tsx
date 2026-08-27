@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package, Clock, Truck, CheckCircle, Phone, MessageSquare, DollarSign, FileText, LogOut } from 'lucide-react';
+import { PackagePlus, Loader2, MapPin, CheckCircle2, RefreshCw, Package, Clock, Truck, CheckCircle, Phone, MessageSquare, DollarSign, FileText, LogOut, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface AddressSuggestion {
@@ -84,25 +84,25 @@ export default function OperatorPage() {
   }, []);
 
   useEffect(() => {
-  const fetchCouriers = async () => {
-    try {
-      const res = await fetch('/api/users/couriers', {
-        cache: 'no-store',
-      });
+    const fetchCouriers = async () => {
+      try {
+        const res = await fetch('/api/users/couriers', {
+          cache: 'no-store',
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        setCouriers(data);
+        if (res.ok) {
+          const data = await res.json();
+          setCouriers(data);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar entregadores:', error);
+      } finally {
+        setIsLoadingCouriers(false);
       }
-    } catch (error) {
-      console.error('Erro ao buscar entregadores:', error);
-    } finally {
-      setIsLoadingCouriers(false);
-    }
-  };
+    };
 
-  fetchCouriers();
-}, []);
+    fetchCouriers();
+  }, []);
 
   // Polling automático a cada 10 segundos
   useEffect(() => {
@@ -177,14 +177,14 @@ export default function OperatorPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-        tracking_code: trackingCode,
-        recipient_name: recipientName,
-        phone,
-        address,
-        latitude,
-        longitude,
-        delivery_fee: deliveryFee ? parseFloat(deliveryFee) : 0,
-        courier_id: courierId || null,
+          tracking_code: trackingCode,
+          recipient_name: recipientName,
+          phone,
+          address,
+          latitude,
+          longitude,
+          delivery_fee: deliveryFee ? parseFloat(deliveryFee) : 0,
+          courier_id: courierId || null,
         }),
       });
 
@@ -246,7 +246,7 @@ export default function OperatorPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
-        
+
         {/* Cabeçalho da Página */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
           <div className="flex items-center gap-3">
@@ -272,6 +272,14 @@ export default function OperatorPage() {
               <span>Atualizar Lista</span>
             </button>
 
+            <button
+              type="button"
+              onClick={() => router.push('/supervisor')}
+              className="flex items-center gap-2 text-xs font-semibold text-white bg-[#002B5C] hover:bg-[#00234D] px-3 py-2 rounded-xl transition"
+            >
+              <Shield className="h-4 w-4" />
+              <span>Supervisor</span>
+            </button>
             <button
               type="button"
               onClick={handleLogout}
@@ -328,7 +336,7 @@ export default function OperatorPage() {
 
         {/* Layout Grid: Formulário na esquerda, Tabela na direita */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Formulário de Cadastro */}
           <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 h-fit space-y-4">
             <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-3">
@@ -403,7 +411,7 @@ export default function OperatorPage() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
                   Entregador
@@ -423,21 +431,21 @@ export default function OperatorPage() {
 
                   {!isLoadingCouriers &&
                     couriers.map((courier) => (
-                    <option key={courier.id} value={courier.id}>
-                      {courier.name}
-                    </option>
+                      <option key={courier.id} value={courier.id}>
+                        {courier.name}
+                      </option>
                     ))}
                 </select>
 
                 <p className="mt-1 text-[10px] text-slate-400">
                   Se nenhum entregador for selecionado, a entrega ficará disponível para todos.
                 </p>
-              </div>      
+              </div>
 
-            <div className="relative">
-              <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                Endereço com Busca GPS
-              </label>
+              <div className="relative">
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Endereço com Busca GPS
+                </label>
                 <div className="relative">
                   <input
                     type="text"
