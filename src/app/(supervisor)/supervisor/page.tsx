@@ -272,6 +272,16 @@ export default function SupervisorPage() {
               {isClearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               <span>Apagar Dados</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => router.push('/operator')}
+              className="px-3 py-2 bg-[#002B5C] hover:bg-[#00234D] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-sm"
+            >
+              <Shield className="h-4 w-4" />
+              <span>Tela do Operador</span>
+            </button>
+
             <button
               type="button"
               onClick={handleLogout}
@@ -391,9 +401,9 @@ export default function SupervisorPage() {
                           />
                         </div>
 
-                      
 
-                        
+
+
 
                         <div className="flex justify-end gap-2 pt-2">
                           <button
@@ -425,7 +435,7 @@ export default function SupervisorPage() {
                                 Entregador: {item.courier_name}
                               </span>
                             )}
-                            
+
                             <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-0.5 border border-emerald-100">
                               <DollarSign className="h-3 w-3" />
                               {Number(item.delivery_fee || 0).toFixed(2)}
@@ -437,7 +447,7 @@ export default function SupervisorPage() {
                             )}
                           </div>
                           <p className="text-xs text-slate-500">{item.address || 'Sem endereço informado'}</p>
-                          
+
 
                           {item.phone && (
                             <div className="flex items-center gap-3 pt-1">

@@ -25,14 +25,20 @@ export async function GET() {
           LEFT JOIN users u
             ON u.id = d.courier_id
           WHERE
-            d.status = 'PENDING'
+            (
+              d.status = 'PENDING'
+              AND (
+                d.courier_id IS NULL
+                OR d.courier_id = ?
+              )
+            )
             OR (
               d.status = 'IN_TRANSIT'
               AND d.courier_id = ?
             )
           ORDER BY d.created_at DESC
         `,
-        args: [session.userId],
+        args: [session.userId, session.userId],
       });
     } else {
       result = await db.execute({
