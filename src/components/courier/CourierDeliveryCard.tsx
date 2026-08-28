@@ -19,7 +19,7 @@ interface CourierDeliveryCardProps {
   address: string;
   lat?: number;
   lng?: number;
-  status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED';
+  status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
   phone?: string | null;
   completionNotes?: string | null;
   deliveryFee?: number | null;

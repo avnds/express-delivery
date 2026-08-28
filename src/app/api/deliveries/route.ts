@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentSession } from '@/lib/auth/session';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await getCurrentSession();
 
@@ -13,8 +13,51 @@ export async function GET() {
       );
     }
 
+    const { searchParams } = new URL(request.url);
+
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
+
+    let dateFilter = '';
+    const dateArgs: string[] = [];
+
+    /*
+     * O SQLite armazena CURRENT_TIMESTAMP em UTC.
+     *
+     * Para o sistema Rotix, consideramos UTC-3.
+     *
+     * Exemplo:
+     * Banco: 2026-08-28 02:00:00 UTC
+     * Brasil: 2026-08-27 23:00:00
+     */
+
+    if (from) {
+      dateFilter += `
+    AND d.created_at >= datetime(?, '+3 hours')
+  `;
+
+      dateArgs.push(`${from} 00:00:00`);
+    }
+
+    if (to) {
+      dateFilter += `
+    AND d.created_at < datetime(?, '+1 day', '+3 hours')
+  `;
+
+      dateArgs.push(`${to} 00:00:00`);
+    }
+
     let result;
 
+    /*
+     * ENTREGADOR
+     *
+     * Mantemos a regra atual:
+     * - PENDING sem entregador ou dele
+     * - IN_TRANSIT somente dele
+     *
+     * O filtro de período não é aplicado aqui.
+     */
     if (session.role === 'COURIER') {
       result = await db.execute({
         sql: `
@@ -41,6 +84,11 @@ export async function GET() {
         args: [session.userId, session.userId],
       });
     } else {
+      /*
+       * OPERADOR / SUPERVISOR
+       *
+       * Aqui aplicamos o filtro de período.
+       */
       result = await db.execute({
         sql: `
           SELECT
@@ -49,9 +97,11 @@ export async function GET() {
           FROM deliveries d
           LEFT JOIN users u
             ON u.id = d.courier_id
+          WHERE 1 = 1
+          ${dateFilter}
           ORDER BY d.created_at DESC
         `,
-        args: [],
+        args: dateArgs,
       });
     }
 
@@ -68,6 +118,15 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await getCurrentSession();
+
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
 
     const {
@@ -88,15 +147,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Entregador é opcional.
-    // Se vier vazio, a entrega ficará disponível para qualquer entregador.
     const courierId =
       typeof courier_id === 'string' && courier_id.trim() !== ''
         ? courier_id.trim()
         : null;
 
-    // Se foi informado um entregador, verifica se ele existe,
-    // está ativo e realmente possui o perfil COURIER.
     if (courierId) {
       const courier = await db.execute({
         sql: `
@@ -112,7 +167,10 @@ export async function POST(request: Request) {
 
       if (courier.rows.length === 0) {
         return NextResponse.json(
-          { error: 'Entregador selecionado não é válido ou está inativo.' },
+          {
+            error:
+              'Entregador selecionado não é válido ou está inativo.',
+          },
           { status: 400 }
         );
       }
