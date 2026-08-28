@@ -34,6 +34,9 @@ export default function SupervisorPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [couriers, setCouriers] = useState<Courier[]>([]);
   const [isLoadingCouriers, setIsLoadingCouriers] = useState(true);
+  const [filterFrom, setFilterFrom] = useState('');
+  const [filterTo, setFilterTo] = useState('');
+  const [activeQuickFilter, setActiveQuickFilter] = useState('today');
 
   // Ref para controlar se estamos editando (evita congelamento pelo polling)
   const isEditingRef = useRef(false);
@@ -50,21 +53,105 @@ export default function SupervisorPage() {
   const [editDeliveryFee, setEditDeliveryFee] = useState('');
   const [editCourierId, setEditCourierId] = useState('');
 
-  const fetchDeliveries = useCallback(async (isSilent = false) => {
-    if (isEditingRef.current) return;
+  const applyQuickFilter = (filter: string) => {
+    const today = new Date();
 
-    if (!isSilent) setIsLoading(true);
-    try {
-      const res = await fetch('/api/deliveries', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        setDeliveries(data);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar entregas no supervisor:', error);
-    } finally {
-      if (!isSilent) setIsLoading(false);
+    const formatDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    };
+
+    const todayFormatted = formatDate(today);
+
+    if (filter === 'today') {
+      setFilterFrom(todayFormatted);
+      setFilterTo(todayFormatted);
     }
+
+    if (filter === 'yesterday') {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+
+      const yesterdayFormatted = formatDate(yesterday);
+
+      setFilterFrom(yesterdayFormatted);
+      setFilterTo(yesterdayFormatted);
+    }
+
+    if (filter === 'last7') {
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - 6);
+
+      setFilterFrom(formatDate(startDate));
+      setFilterTo(todayFormatted);
+    }
+
+    if (filter === 'month') {
+      const startOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      );
+
+      setFilterFrom(formatDate(startOfMonth));
+      setFilterTo(todayFormatted);
+    }
+
+    if (filter === 'all') {
+      setFilterFrom('');
+      setFilterTo('');
+    }
+
+    setActiveQuickFilter(filter);
+  };
+
+  const fetchDeliveries = useCallback(
+    async (isSilent = false) => {
+      if (isEditingRef.current) return;
+
+      if (!isSilent) setIsLoading(true);
+
+      try {
+        const params = new URLSearchParams();
+
+        if (filterFrom) {
+          params.set('from', filterFrom);
+        }
+
+        if (filterTo) {
+          params.set('to', filterTo);
+        }
+
+        const query = params.toString();
+
+        const res = await fetch(
+          `/api/deliveries${query ? `?${query}` : ''}`,
+          {
+            cache: 'no-store',
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          setDeliveries(data);
+        }
+      } catch (error) {
+        console.error(
+          'Erro ao carregar entregas no supervisor:',
+          error
+        );
+      } finally {
+        if (!isSilent) setIsLoading(false);
+      }
+    },
+    [filterFrom, filterTo]
+  );
+
+  useEffect(() => {
+    applyQuickFilter('today');
   }, []);
 
   useEffect(() => {
@@ -294,8 +381,133 @@ export default function SupervisorPage() {
         </div>
         <UserManagement />
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 font-bold text-xs text-slate-700 uppercase tracking-wider">
-            Ordens Registradas ({deliveries.length})
+          <div className="p-4 border-b border-slate-100">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+
+              <div>
+                <h2 className="font-bold text-xs text-slate-700 uppercase tracking-wider">
+                  Ordens Registradas ({deliveries.length})
+                </h2>
+
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Consulte as entregas por período
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+
+                {/* Filtros rápidos */}
+                <div className="flex flex-wrap gap-2">
+
+                  <button
+                    type="button"
+                    onClick={() => applyQuickFilter('today')}
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter === 'today'
+                        ? 'bg-[#002B5C] text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                  >
+                    Hoje
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyQuickFilter('yesterday')}
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter === 'yesterday'
+                        ? 'bg-[#002B5C] text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                  >
+                    Ontem
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyQuickFilter('last7')}
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter === 'last7'
+                        ? 'bg-[#002B5C] text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                  >
+                    Últimos 7 dias
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyQuickFilter('month')}
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter === 'month'
+                        ? 'bg-[#002B5C] text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                  >
+                    Este mês
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => applyQuickFilter('all')}
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter === 'all'
+                        ? 'bg-[#002B5C] text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                  >
+                    Todos
+                  </button>
+
+                </div>
+
+                {/* Datas manuais */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Data inicial
+                    </label>
+
+                    <input
+                      type="date"
+                      value={filterFrom}
+                      onChange={(e) => {
+                        setFilterFrom(e.target.value);
+                        setActiveQuickFilter('');
+                      }}
+                      className="text-xs border border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      Data final
+                    </label>
+
+                    <input
+                      type="date"
+                      value={filterTo}
+                      onChange={(e) => {
+                        setFilterTo(e.target.value);
+                        setActiveQuickFilter('');
+                      }}
+                      className="text-xs border border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFilterFrom('');
+                      setFilterTo('');
+                      setActiveQuickFilter('all');
+                    }}
+                    className="h-[34px] px-3 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                  >
+                    Limpar
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
           </div>
 
           {isLoading ? (
@@ -382,10 +594,10 @@ export default function SupervisorPage() {
                               onChange={(e) => setEditStatus(e.target.value as DeliveryItem['status'])}
                               className="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
                             >
-                              <option value="PENDING">PENDING</option>
-                              <option value="IN_TRANSIT">IN_TRANSIT</option>
-                              <option value="DELIVERED">DELIVERED</option>
-                              <option value="CANCELLED">CANCELLED</option>
+                              <option value="PENDING">Pendente</option>
+                              <option value="IN_TRANSIT">Em transito</option>
+                              <option value="DELIVERED">Entregue</option>
+                              <option value="CANCELLED">Cancelado</option>
                             </select>
                           </div>
                         </div>
@@ -482,10 +694,10 @@ export default function SupervisorPage() {
                             onChange={(e) => handleQuickStatusChange(item.id, e.target.value as DeliveryItem['status'])}
                             className="text-xs border border-slate-300 rounded-xl px-3 py-1.5 bg-slate-50 font-medium text-slate-700 outline-none focus:ring-2 focus:ring-[#FF6600]/30 focus:border-[#FF6600]"
                           >
-                            <option value="PENDING">PENDING</option>
-                            <option value="IN_TRANSIT">IN_TRANSIT</option>
-                            <option value="DELIVERED">DELIVERED</option>
-                            <option value="CANCELLED">CANCELLED</option>
+                            <option value="PENDING">Pendente</option>
+                            <option value="IN_TRANSIT">Em transito</option>
+                            <option value="DELIVERED">Entregue</option>
+                            <option value="CANCELLED">Cancelado</option>
                           </select>
 
                           <button

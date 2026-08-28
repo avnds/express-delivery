@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { CourierDeliveryCard } from '@/components/courier/CourierDeliveryCard';
 //import { Truck, DollarSign, Loader2 } from 'lucide-react';
 import { Truck, DollarSign, Loader2, LogOut } from 'lucide-react';
@@ -13,7 +13,7 @@ interface Delivery {
   address: string;
   lat?: number | string;
   lng?: number | string;
-  status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED';
+  status: 'PENDING' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
   phone?: string | null;
   completion_notes?: string | null;
   delivery_fee?: number | null;
@@ -23,23 +23,61 @@ export default function CourierPage() {
   const router = useRouter();
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const previousDeliveryIdsRef = useRef<string[]>([]);
+  const isFirstLoadRef = useRef(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playNotificationSound = useCallback(() => {
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new Audio('/sounds/nova-entrega.mp3');
+        audioRef.current.volume = 1;
+      }
+
+      audioRef.current.currentTime = 0;
+
+      audioRef.current.play().catch((error) => {
+        console.warn('Não foi possível reproduzir o som:', error);
+      });
+    } catch (error) {
+      console.warn('Erro ao reproduzir som de notificação:', error);
+    }
+  }, []);
 
   const fetchDeliveries = useCallback(async (isSilent = false) => {
     if (!isSilent) setIsLoading(true);
     try {
       const res = await fetch('/api/deliveries', { cache: 'no-store' });
       if (res.ok) {
-        const data = await res.json();
-        // Nota: se quiser listar entregas já finalizadas para permitir a reedição rápida no card, 
-        // você pode ajustar o filtro aqui conforme sua necessidade operacional.
-        setDeliveries(data.filter((d: Delivery) => d.status !== 'DELIVERED' && d.status !== ('CANCELLED' as any)));
+        const data: Delivery[] = await res.json();
+
+        const filteredDeliveries = data.filter(
+          (d) => d.status !== 'DELIVERED' && d.status !== 'CANCELLED'
+        );
+
+        const currentIds = filteredDeliveries.map((delivery) => delivery.id);
+
+        if (!isFirstLoadRef.current) {
+          const hasNewDelivery = currentIds.some(
+            (id) => !previousDeliveryIdsRef.current.includes(id)
+          );
+
+          if (hasNewDelivery) {
+            playNotificationSound();
+          }
+        }
+
+        previousDeliveryIdsRef.current = currentIds;
+        isFirstLoadRef.current = false;
+
+        setDeliveries(filteredDeliveries);
       }
     } catch (error) {
       console.error('Erro ao carregar entregas do entregador:', error);
     } finally {
       if (!isSilent) setIsLoading(false);
     }
-  }, []);
+  }, [playNotificationSound]);
 
   useEffect(() => {
     // Busca inicial
@@ -55,17 +93,17 @@ export default function CourierPage() {
   }, [fetchDeliveries]);
 
   const handleUpdateStatus = async (
-    id: string, 
-    newStatus: 'IN_TRANSIT' | 'DELIVERED', 
+    id: string,
+    newStatus: 'IN_TRANSIT' | 'DELIVERED',
     extraData?: { completion_notes?: string; delivery_fee?: number }
   ) => {
     try {
       const res = await fetch(`/api/deliveries/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: newStatus,
-          ...extraData 
+          ...extraData
         }),
       });
 
