@@ -166,6 +166,36 @@ const migrations = [
       console.log('✓ Migration 002 concluída.');
     },
   },
+    {
+    version: '003_push_notifications',
+    run: async () => {
+      console.log('Aplicando Migration 003...');
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          endpoint TEXT NOT NULL UNIQUE,
+          p256dh TEXT NOT NULL,
+          auth TEXT NOT NULL,
+          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+          FOREIGN KEY (user_id)
+            REFERENCES users(id)
+            ON DELETE CASCADE
+        );
+      `);
+
+      await client.execute(`
+        CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id
+        ON push_subscriptions(user_id);
+      `);
+
+      console.log('✓ Tabela push_subscriptions criada.');
+      console.log('✓ Migration 003 concluída.');
+    },
+  },
 ];
 
 async function migrate() {
