@@ -5,6 +5,7 @@ import { CourierDeliveryCard } from '@/components/courier/CourierDeliveryCard';
 //import { Truck, DollarSign, Loader2 } from 'lucide-react';
 import { Truck, DollarSign, Loader2, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import PushNotificationButton from '@/components/PushNotificationButton';
 
 interface Delivery {
   id: string;
@@ -165,6 +166,10 @@ export default function CourierPage() {
       </div>
 
       <div className="max-w-md mx-auto p-4 space-y-4">
+        <div className="bg-white rounded-2xl p-3 border border-slate-200">
+          <PushNotificationButton />
+        </div>
+
         {isLoading ? (
           <div className="flex flex-col items-center justify-center p-8 text-slate-400 text-xs gap-2">
             <Loader2 className="h-6 w-6 animate-spin text-[#002B5C]" />

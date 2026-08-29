@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentSession } from '@/lib/auth/session';
+import { sendPushNotification } from '@/lib/push/sendPushNotification';
 
 export async function GET(request: Request) {
   try {
@@ -208,6 +209,21 @@ export async function POST(request: Request) {
         courierId,
       ],
     });
+
+    if (courierId) {
+      try {
+        await sendPushNotification(courierId, {
+          title: '🔔 Nova entrega disponível',
+          body: `Entrega ${tracking_code} disponível para você.`,
+          url: '/courier',
+        });
+      } catch (error) {
+        console.error(
+          '[Rotix Push] Falha ao enviar notificação da nova entrega:',
+          error
+        );
+      }
+    }
 
     return NextResponse.json(
       {
