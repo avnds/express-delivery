@@ -32,8 +32,20 @@ export default function EarningsPage() {
   const [earnings, setEarnings] = useState<EarningRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [filterFrom, setFilterFrom] = useState('');
-  const [filterTo, setFilterTo] = useState('');
+  const getToday = () => {
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const today = getToday();
+
+  const [filterFrom, setFilterFrom] = useState(today);
+  const [filterTo, setFilterTo] = useState(today);
   const [activeQuickFilter, setActiveQuickFilter] = useState('today');
 
   const applyQuickFilter = (filter: string) => {
@@ -156,9 +168,7 @@ export default function EarningsPage() {
     }
   }, [filterFrom, filterTo]);
 
-  useEffect(() => {
-    applyQuickFilter('today');
-  }, []);
+ 
 
   useEffect(() => {
     fetchEarnings();
@@ -224,11 +234,10 @@ export default function EarningsPage() {
               <button
                 type="button"
                 onClick={() => applyQuickFilter('today')}
-                className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                  activeQuickFilter === 'today'
+                className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter === 'today'
                     ? 'bg-[#002B5C] text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                  }`}
               >
                 Hoje
               </button>
@@ -236,11 +245,10 @@ export default function EarningsPage() {
               <button
                 type="button"
                 onClick={() => applyQuickFilter('yesterday')}
-                className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                  activeQuickFilter === 'yesterday'
+                className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter === 'yesterday'
                     ? 'bg-[#002B5C] text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                  }`}
               >
                 Ontem
               </button>
@@ -248,11 +256,10 @@ export default function EarningsPage() {
               <button
                 type="button"
                 onClick={() => applyQuickFilter('last7')}
-                className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                  activeQuickFilter === 'last7'
+                className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter === 'last7'
                     ? 'bg-[#002B5C] text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                  }`}
               >
                 Últimos 7 dias
               </button>
@@ -260,11 +267,10 @@ export default function EarningsPage() {
               <button
                 type="button"
                 onClick={() => applyQuickFilter('month')}
-                className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                  activeQuickFilter === 'month'
+                className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter === 'month'
                     ? 'bg-[#002B5C] text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                  }`}
               >
                 Este mês
               </button>
@@ -272,11 +278,10 @@ export default function EarningsPage() {
               <button
                 type="button"
                 onClick={() => applyQuickFilter('all')}
-                className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                  activeQuickFilter === 'all'
+                className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter === 'all'
                     ? 'bg-[#002B5C] text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                  }`}
               >
                 Todos
               </button>
@@ -369,11 +374,10 @@ export default function EarningsPage() {
                     <div className="flex items-center gap-3">
 
                       <div
-                        className={`p-2 rounded-xl ${
-                          isCancelled
+                        className={`p-2 rounded-xl ${isCancelled
                             ? 'bg-red-50 text-red-600'
                             : 'bg-emerald-50 text-emerald-600'
-                        }`}
+                          }`}
                       >
                         {isCancelled ? (
                           <XCircle className="h-4 w-4" />
@@ -406,11 +410,10 @@ export default function EarningsPage() {
                     </div>
 
                     <span
-                      className={`font-bold text-sm ${
-                        isCancelled
+                      className={`font-bold text-sm ${isCancelled
                           ? 'text-slate-400'
                           : 'text-emerald-600'
-                      }`}
+                        }`}
                     >
                       + R$ {item.amount.toFixed(2)}
                     </span>
