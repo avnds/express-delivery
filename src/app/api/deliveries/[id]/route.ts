@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentSession } from '@/lib/auth/session';
+import { sendPushNotification } from '@/lib/push/sendPushNotification';
 
 export async function PATCH(
   request: Request,
@@ -48,6 +49,81 @@ export async function PATCH(
 
     /*
      * ============================================================
+     * FUNÇÃO AUXILIAR DE SINCRONIZAÇÃO
+     * ============================================================
+     *
+     * DATA_CHANGED não gera notificação visual.
+     *
+     * O Push serve apenas para avisar a página que os dados
+     * mudaram. A página então faz um GET para buscar os dados
+     * oficiais do banco.
+     */
+
+    const sendDataChanged = async (
+      userIds: string[]
+    ) => {
+      const uniqueUserIds = [
+        ...new Set(
+          userIds.filter(
+            (userId) =>
+              typeof userId === 'string' &&
+              userId !== session.userId
+          )
+        ),
+      ];
+
+      for (const userId of uniqueUserIds) {
+        try {
+          await sendPushNotification(userId, {
+            type: 'DATA_CHANGED',
+            title: '',
+            body: '',
+            deliveryId: id,
+          });
+        } catch (error) {
+          console.error(
+            `[Rotix Push] Falha ao sincronizar usuário ${userId}:`,
+            error
+          );
+        }
+      }
+    };
+
+    /*
+     * ============================================================
+     * BUSCAR USUÁRIOS ADMINISTRATIVOS PARA SINCRONIZAÇÃO
+     * ============================================================
+     *
+     * Somente usuários ativos com perfil OPERATOR ou SUPERVISOR
+     * que possuem uma subscription Push serão considerados.
+     *
+     * O próprio usuário que realizou a alteração será excluído
+     * posteriormente pela função sendDataChanged().
+     */
+
+    const getAdminUserIds = async () => {
+      const result = await db.execute({
+        sql: `
+          SELECT DISTINCT ps.user_id
+          FROM push_subscriptions ps
+          INNER JOIN users u
+            ON u.id = ps.user_id
+          WHERE u.active = 1
+            AND u.role IN ('OPERATOR', 'SUPERVISOR')
+        `,
+        args: [],
+      });
+
+      return result.rows
+        .map((row) => row.user_id)
+        .filter(
+          (userId): userId is string =>
+            typeof userId === 'string'
+        );
+    };
+
+    /*
+     * ============================================================
      * REGRAS DO ENTREGADOR
      * ============================================================
      */
@@ -65,7 +141,7 @@ export async function PATCH(
         }
 
         // Vincula a entrega ao entregador autenticado.
-        await db.execute({
+        const updateResult = await db.execute({
           sql: `
             UPDATE deliveries
             SET
@@ -76,6 +152,23 @@ export async function PATCH(
           `,
           args: [session.userId, id],
         });
+
+        /*
+         * Só sincronizamos os demais usuários se o UPDATE
+         * realmente tiver alterado a entrega.
+         */
+        if (updateResult.rowsAffected > 0) {
+          try {
+            const adminUserIds = await getAdminUserIds();
+
+            await sendDataChanged(adminUserIds);
+          } catch (error) {
+            console.error(
+              '[Rotix Push] Falha ao sincronizar após coleta:',
+              error
+            );
+          }
+        }
 
         return NextResponse.json({
           success: true,
@@ -115,7 +208,7 @@ export async function PATCH(
             ? courier_id
             : item.courier_id;
 
-        await db.execute({
+        const updateResult = await db.execute({
           sql: `
             UPDATE deliveries
             SET
@@ -133,6 +226,23 @@ export async function PATCH(
             session.userId,
           ],
         });
+
+        /*
+         * Só sincronizamos os demais usuários se o UPDATE
+         * realmente tiver alterado a entrega.
+         */
+        if (updateResult.rowsAffected > 0) {
+          try {
+            const adminUserIds = await getAdminUserIds();
+
+            await sendDataChanged(adminUserIds);
+          } catch (error) {
+            console.error(
+              '[Rotix Push] Falha ao sincronizar após conclusão:',
+              error
+            );
+          }
+        }
 
         return NextResponse.json({
           success: true,
@@ -188,13 +298,13 @@ export async function PATCH(
       delivery_fee !== undefined
         ? delivery_fee
         : item.delivery_fee;
-    
+
     const updatedCourierId =
       courier_id !== undefined
         ? courier_id
         : item.courier_id;
 
-    await db.execute({
+    const updateResult = await db.execute({
       sql: `
         UPDATE deliveries
         SET
@@ -224,6 +334,54 @@ export async function PATCH(
         id,
       ],
     });
+
+    /*
+     * ============================================================
+     * SINCRONIZAÇÃO APÓS ALTERAÇÃO ADMINISTRATIVA
+     * ============================================================
+     *
+     * O entregador antigo pode precisar atualizar sua tela.
+     *
+     * O novo entregador também pode precisar atualizar sua tela.
+     *
+     * Operadores e Supervisores também precisam saber que a
+     * entrega mudou.
+     *
+     * O usuário que fez a alteração é excluído para evitar
+     * um GET duplicado.
+     */
+
+    if (updateResult.rowsAffected > 0) {
+      try {
+        const adminUserIds = await getAdminUserIds();
+
+        const courierUserIds: string[] = [];
+
+        if (
+          typeof item.courier_id === 'string' &&
+          item.courier_id.trim() !== ''
+        ) {
+          courierUserIds.push(item.courier_id);
+        }
+
+        if (
+          typeof updatedCourierId === 'string' &&
+          updatedCourierId.trim() !== ''
+        ) {
+          courierUserIds.push(updatedCourierId);
+        }
+
+        await sendDataChanged([
+          ...adminUserIds,
+          ...courierUserIds,
+        ]);
+      } catch (error) {
+        console.error(
+          '[Rotix Push] Falha ao sincronizar após alteração administrativa:',
+          error
+        );
+      }
+    }
 
     return NextResponse.json({
       success: true,

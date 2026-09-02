@@ -2,7 +2,7 @@ import webpush from 'web-push';
 import { db } from '@/lib/db';
 
 const vapidSubject = process.env.VAPID_SUBJECT;
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 
 if (!vapidSubject || !vapidPublicKey || !vapidPrivateKey) {
@@ -18,9 +18,11 @@ webpush.setVapidDetails(
 );
 
 interface PushPayload {
+  type: 'NEW_DELIVERY' | 'DATA_CHANGED';
   title: string;
   body: string;
   url?: string;
+  deliveryId?: string;
 }
 
 export async function sendPushNotification(

@@ -14,9 +14,20 @@ export async function POST(request: Request) {
       );
     }
 
-    if (session.role !== 'COURIER') {
+    const allowedRoles = [
+      'COURIER',
+      'OPERATOR',
+      'SUPERVISOR',
+    ] as const;
+
+    if (
+      typeof session.role !== 'string' ||
+      !allowedRoles.includes(
+        session.role as (typeof allowedRoles)[number]
+      )
+    ) {
       return NextResponse.json(
-        { error: 'Acesso permitido somente para entregadores' },
+        { error: 'Perfil não autorizado para notificações Push' },
         { status: 403 }
       );
     }
@@ -33,7 +44,7 @@ export async function POST(request: Request) {
       typeof auth !== 'string'
     ) {
       return NextResponse.json(
-        { error: 'Assinatura push inválida' },
+        { error: 'Assinatura Push inválida' },
         { status: 400 }
       );
     }

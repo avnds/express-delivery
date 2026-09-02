@@ -47,20 +47,29 @@ export default function CourierPage() {
 
   const fetchDeliveries = useCallback(async (isSilent = false) => {
     if (!isSilent) setIsLoading(true);
+
     try {
-      const res = await fetch('/api/deliveries', { cache: 'no-store' });
+      const res = await fetch('/api/deliveries', {
+        cache: 'no-store',
+      });
+
       if (res.ok) {
         const data: Delivery[] = await res.json();
 
         const filteredDeliveries = data.filter(
-          (d) => d.status !== 'DELIVERED' && d.status !== 'CANCELLED'
+          (d) =>
+            d.status !== 'DELIVERED' &&
+            d.status !== 'CANCELLED'
         );
 
-        const currentIds = filteredDeliveries.map((delivery) => delivery.id);
+        const currentIds = filteredDeliveries.map(
+          (delivery) => delivery.id
+        );
 
         if (!isFirstLoadRef.current) {
           const hasNewDelivery = currentIds.some(
-            (id) => !previousDeliveryIdsRef.current.includes(id)
+            (id) =>
+              !previousDeliveryIdsRef.current.includes(id)
           );
 
           if (hasNewDelivery) {
@@ -74,7 +83,10 @@ export default function CourierPage() {
         setDeliveries(filteredDeliveries);
       }
     } catch (error) {
-      console.error('Erro ao carregar entregas do entregador:', error);
+      console.error(
+        'Erro ao carregar entregas do entregador:',
+        error
+      );
     } finally {
       if (!isSilent) setIsLoading(false);
     }
@@ -84,27 +96,61 @@ export default function CourierPage() {
     // Busca inicial
     fetchDeliveries();
 
-    // Polling: Atualiza silenciosamente a cada 4 segundos
-    const interval = setInterval(() => {
+    // Escuta eventos enviados pelo Service Worker
+    const handleServiceWorkerMessage = (
+      event: MessageEvent
+    ) => {
+      if (
+        event.data?.type !== 'DATA_CHANGED' &&
+        event.data?.type !== 'NEW_DELIVERY'
+      ) {
+        return;
+      }
+
+      console.log(
+        '[Rotix] Evento de sincronização recebido:',
+        event.data
+      );
+
+      // O Push apenas dispara uma nova busca.
+      // A API continua sendo a fonte oficial dos dados.
       fetchDeliveries(true);
-    }, 4000);
+    };
 
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener(
+        'message',
+        handleServiceWorkerMessage
+      );
+    }
 
-    return () => clearInterval(interval);
+    return () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener(
+          'message',
+          handleServiceWorkerMessage
+        );
+      }
+    };
   }, [fetchDeliveries]);
 
   const handleUpdateStatus = async (
     id: string,
     newStatus: 'IN_TRANSIT' | 'DELIVERED',
-    extraData?: { completion_notes?: string; delivery_fee?: number }
+    extraData?: {
+      completion_notes?: string;
+      delivery_fee?: number;
+    }
   ) => {
     try {
       const res = await fetch(`/api/deliveries/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           status: newStatus,
-          ...extraData
+          ...extraData,
         }),
       });
 
@@ -141,9 +187,15 @@ export default function CourierPage() {
                 className="h-10 w-10 object-contain"
               />
             </div>
+
             <div>
-              <h1 className="font-black text-sm tracking-tight">Fila de Entregas</h1>
-              <p className="text-[10px] text-slate-400">Visão do Entregador</p>
+              <h1 className="font-black text-sm tracking-tight">
+                Fila de Entregas
+              </h1>
+
+              <p className="text-[10px] text-slate-400">
+                Visão do Entregador
+              </p>
             </div>
           </div>
 
@@ -154,6 +206,7 @@ export default function CourierPage() {
             <DollarSign className="h-4 w-4" />
             <span>Ganhos</span>
           </a>
+
           <button
             type="button"
             onClick={handleLogout}
@@ -173,7 +226,9 @@ export default function CourierPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center p-8 text-slate-400 text-xs gap-2">
             <Loader2 className="h-6 w-6 animate-spin text-[#002B5C]" />
-            <span>Buscando entregas disponíveis...</span>
+            <span>
+              Buscando entregas disponíveis...
+            </span>
           </div>
         ) : deliveries.length === 0 ? (
           <div className="bg-white p-8 rounded-2xl text-center text-slate-400 text-xs font-medium border border-slate-200">
@@ -187,8 +242,16 @@ export default function CourierPage() {
               trackingCode={delivery.tracking_code}
               recipientName={delivery.recipient_name}
               address={delivery.address}
-              lat={delivery.lat ? Number(delivery.lat) : undefined}
-              lng={delivery.lng ? Number(delivery.lng) : undefined}
+              lat={
+                delivery.lat
+                  ? Number(delivery.lat)
+                  : undefined
+              }
+              lng={
+                delivery.lng
+                  ? Number(delivery.lng)
+                  : undefined
+              }
               status={delivery.status}
               phone={delivery.phone}
               completionNotes={delivery.completion_notes}

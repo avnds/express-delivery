@@ -15,6 +15,7 @@ self.addEventListener('push', (event) => {
   console.log('[Rotix SW] Push recebido');
 
   let data = {
+    type: 'NEW_DELIVERY',
     title: 'Rotix',
     body: 'Você recebeu uma nova notificação.',
     url: '/courier',
@@ -35,14 +36,30 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/ico android.png',
-      badge: '/ico android.png',
-      data: {
-        url: data.url || '/courier',
-      },
-    })
+    (async () => {
+      const clientList = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      });
+
+      for (const client of clientList) {
+        client.postMessage({
+          type: data.type,
+          deliveryId: data.deliveryId,
+        });
+      }
+
+      if (data.type === 'NEW_DELIVERY') {
+        await self.registration.showNotification(data.title, {
+          body: data.body,
+          icon: '/ico android.png',
+          badge: '/ico android.png',
+          data: {
+            url: data.url || '/courier',
+          },
+        });
+      }
+    })()
   );
 });
 
