@@ -210,12 +210,24 @@ export async function POST(request: Request) {
       ],
     });
 
+    /*
+     * NOVA ENTREGA
+     *
+     * Se houver entregador definido, enviamos um evento
+     * NEW_DELIVERY para ele.
+     *
+     * O Service Worker:
+     * - mostra a notificação visual;
+     * - avisa a página para sincronizar.
+     */
     if (courierId) {
       try {
         await sendPushNotification(courierId, {
+          type: 'NEW_DELIVERY',
           title: '🔔 Nova entrega disponível',
           body: `Entrega ${tracking_code} disponível para você.`,
           url: '/courier',
+          deliveryId: id,
         });
       } catch (error) {
         console.error(
@@ -223,6 +235,57 @@ export async function POST(request: Request) {
           error
         );
       }
+    }
+
+    /*
+     * SINCRONIZAÇÃO DOS USUÁRIOS ADMINISTRATIVOS
+     *
+     * Operadores e Supervisores que possuem Push ativo
+     * precisam atualizar suas listas.
+     *
+     * O usuário que criou a entrega é excluído porque
+     * a própria tela já faz um GET após o POST.
+     */
+    try {
+      const adminSubscriptions = await db.execute({
+        sql: `
+          SELECT DISTINCT ps.user_id
+          FROM push_subscriptions ps
+          INNER JOIN users u
+            ON u.id = ps.user_id
+          WHERE u.active = 1
+            AND u.role IN ('OPERATOR', 'SUPERVISOR')
+            AND ps.user_id != ?
+        `,
+        args: [session.userId],
+      });
+
+      for (const row of adminSubscriptions.rows) {
+        const userId = row.user_id;
+
+        if (typeof userId !== 'string') {
+          continue;
+        }
+
+        try {
+          await sendPushNotification(userId, {
+            type: 'DATA_CHANGED',
+            title: '',
+            body: '',
+            deliveryId: id,
+          });
+        } catch (error) {
+          console.error(
+            `[Rotix Push] Falha ao sincronizar usuário ${userId}:`,
+            error
+          );
+        }
+      }
+    } catch (error) {
+      console.error(
+        '[Rotix Push] Falha ao buscar usuários para sincronização:',
+        error
+      );
     }
 
     return NextResponse.json(

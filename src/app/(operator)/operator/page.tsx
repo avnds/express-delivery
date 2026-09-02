@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
+import PushNotificationButton from '@/components/PushNotificationButton';
 
 interface AddressSuggestion {
   place_id: number;
@@ -344,16 +345,50 @@ export default function OperatorPage() {
   }, [fetchDeliveries]);
 
   // ============================================================
-  // POLLING AUTOMÁTICO
+  // SINCRONIZAÇÃO VIA PUSH
   // ============================================================
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const handleServiceWorkerMessage = (
+      event: MessageEvent
+    ) => {
+      if (
+        event.data?.type !== 'DATA_CHANGED' &&
+        event.data?.type !== 'NEW_DELIVERY'
+      ) {
+        return;
+      }
+
+      console.log(
+        '[Rotix] Evento de sincronização recebido:',
+        event.data
+      );
+
+      /*
+       * O Push apenas dispara uma nova busca.
+       *
+       * A API continua sendo a fonte oficial dos dados.
+       *
+       * Os filtros atuais são preservados porque
+       * fetchDeliveries utiliza filterFrom/filterTo.
+       */
       fetchDeliveries(true);
-    }, 4000);
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener(
+        'message',
+        handleServiceWorkerMessage
+      );
+    }
 
     return () => {
-      clearInterval(interval);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener(
+          'message',
+          handleServiceWorkerMessage
+        );
+      }
     };
   }, [fetchDeliveries]);
 
@@ -947,6 +982,8 @@ export default function OperatorPage() {
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-auto">
+
+            <PushNotificationButton />
 
             <button
               type="button"
