@@ -39,6 +39,15 @@ interface DeliveryItem {
   courier_name?: string | null;
 }
 
+interface EarningRecord {
+  id: string;
+  tracking_code: string;
+  status: 'DELIVERED';
+  delivery_fee: number | null;
+  created_at: string;
+  completion_notes?: string | null;
+}
+
 export default function SupervisorPage() {
   const router = useRouter();
   const [deliveries, setDeliveries] = useState<DeliveryItem[]>([]);
@@ -50,6 +59,17 @@ export default function SupervisorPage() {
   const [filterFrom, setFilterFrom] = useState('');
   const [filterTo, setFilterTo] = useState('');
   const [activeQuickFilter, setActiveQuickFilter] = useState('today');
+
+  // Estados dos ganhos dos entregadores
+  const [selectedEarningsCourierId, setSelectedEarningsCourierId] =
+    useState('');
+  const [earnings, setEarnings] = useState<EarningRecord[]>([]);
+  const [isLoadingEarnings, setIsLoadingEarnings] = useState(false);
+  const [earningsError, setEarningsError] = useState('');
+  const [earningsFilterFrom, setEarningsFilterFrom] = useState('');
+  const [earningsFilterTo, setEarningsFilterTo] = useState('');
+  const [activeEarningsQuickFilter, setActiveEarningsQuickFilter] =
+    useState('today');
 
   // Ref para controlar se estamos editando
   // Evita atualização automática durante a edição.
@@ -123,6 +143,155 @@ export default function SupervisorPage() {
     setActiveQuickFilter(filter);
   };
 
+  const applyEarningsQuickFilter = (filter: string) => {
+    const today = new Date();
+
+    const formatDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(
+        date.getMonth() + 1
+      ).padStart(2, '0');
+      const day = String(
+        date.getDate()
+      ).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    };
+
+    const todayFormatted = formatDate(today);
+
+    if (filter === 'today') {
+      setEarningsFilterFrom(todayFormatted);
+      setEarningsFilterTo(todayFormatted);
+    }
+
+    if (filter === 'yesterday') {
+      const yesterday = new Date(today);
+
+      yesterday.setDate(
+        today.getDate() - 1
+      );
+
+      const yesterdayFormatted =
+        formatDate(yesterday);
+
+      setEarningsFilterFrom(
+        yesterdayFormatted
+      );
+
+      setEarningsFilterTo(
+        yesterdayFormatted
+      );
+    }
+
+    if (filter === 'last7') {
+      const startDate = new Date(today);
+
+      startDate.setDate(
+        today.getDate() - 6
+      );
+
+      setEarningsFilterFrom(
+        formatDate(startDate)
+      );
+
+      setEarningsFilterTo(
+        todayFormatted
+      );
+    }
+
+    if (filter === 'month') {
+      const startOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      );
+
+      setEarningsFilterFrom(
+        formatDate(startOfMonth)
+      );
+
+      setEarningsFilterTo(
+        todayFormatted
+      );
+    }
+
+    if (filter === 'all') {
+      setEarningsFilterFrom('');
+      setEarningsFilterTo('');
+    }
+
+    setActiveEarningsQuickFilter(filter);
+  };
+
+  const fetchEarnings = useCallback(async () => {
+    
+    if (!selectedEarningsCourierId) {
+      setEarnings([]);
+      return;
+    }
+
+    setIsLoadingEarnings(true);
+    setEarningsError('');
+
+    try {
+      const params = new URLSearchParams();
+
+      params.set(
+        'courier_id',
+        selectedEarningsCourierId
+      );
+
+      if (earningsFilterFrom) {
+        params.set('from', earningsFilterFrom);
+      }
+
+      if (earningsFilterTo) {
+        params.set('to', earningsFilterTo);
+      }
+
+      const res = await fetch(
+        `/api/earnings?${params.toString()}`,
+        {
+          cache: 'no-store',
+        }
+      );
+
+      const data = await res.json();
+      
+
+      if (!res.ok) {
+        throw new Error(
+          data?.error || 'Erro ao buscar ganhos.'
+        );
+      }
+
+      setEarnings(data);
+    } catch (error) {
+      console.error(
+        'Erro ao carregar ganhos:',
+        error
+      );
+
+      setEarnings([]);
+      setEarningsError(
+        'Não foi possível carregar os ganhos.'
+      );
+    } finally {
+      setIsLoadingEarnings(false);
+    }
+  }, [
+    selectedEarningsCourierId,
+    earningsFilterFrom,
+    earningsFilterTo,
+  ]);
+
+  const totalEarnings = earnings.reduce(
+    (total, item) =>
+      total + Number(item.delivery_fee || 0),
+    0
+  );
+
   const fetchDeliveries = useCallback(
     async (isSilent = false) => {
       if (isEditingRef.current) return;
@@ -169,6 +338,10 @@ export default function SupervisorPage() {
     applyQuickFilter('today');
   }, []);
 
+  useEffect(() => {
+    applyEarningsQuickFilter('today');
+  }, []);
+
   // ============================================================
   // BUSCAR ENTREGAS INICIALMENTE / QUANDO O FILTRO MUDA
   // ============================================================
@@ -176,6 +349,10 @@ export default function SupervisorPage() {
   useEffect(() => {
     fetchDeliveries();
   }, [fetchDeliveries]);
+
+  useEffect(() => {
+    fetchEarnings();
+  }, [fetchEarnings]);
 
   // ============================================================
   // SINCRONIZAÇÃO VIA PUSH
@@ -197,6 +374,8 @@ export default function SupervisorPage() {
         event.data
       );
 
+      
+
       /*
        * O Push apenas dispara uma nova busca.
        *
@@ -206,6 +385,7 @@ export default function SupervisorPage() {
        * fetchDeliveries utiliza filterFrom/filterTo.
        */
       fetchDeliveries(true);
+      fetchEarnings();
     };
 
     if ('serviceWorker' in navigator) {
@@ -223,7 +403,7 @@ export default function SupervisorPage() {
         );
       }
     };
-  }, [fetchDeliveries]);
+  }, [fetchDeliveries, fetchEarnings]);
 
   // ============================================================
   // CARREGAR ENTREGADORES
@@ -238,7 +418,15 @@ export default function SupervisorPage() {
 
         if (res.ok) {
           const data = await res.json();
+
           setCouriers(data);
+
+          if (data.length > 0) {
+            setSelectedEarningsCourierId(
+              (current: string) =>
+                current || data[0].id
+            );
+          }
         }
       } catch (error) {
         console.error(
@@ -418,8 +606,8 @@ export default function SupervisorPage() {
             delivery_fee:
               editDeliveryFee !== ''
                 ? parseFloat(
-                    editDeliveryFee
-                  )
+                  editDeliveryFee
+                )
                 : 0,
             courier_id:
               editCourierId || null,
@@ -432,6 +620,7 @@ export default function SupervisorPage() {
         isEditingRef.current = false;
 
         fetchDeliveries(true);
+        fetchEarnings();
       } else {
         alert(
           'Erro ao atualizar entrega.'
@@ -470,6 +659,7 @@ export default function SupervisorPage() {
 
       if (res.ok) {
         fetchDeliveries(true);
+        fetchEarnings();
       } else {
         alert(
           'Erro ao atualizar status.'
@@ -603,6 +793,203 @@ export default function SupervisorPage() {
 
         <UserManagement />
 
+        <div className="mt-6 rounded-xl border bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            <h2 className="text-xl font-semibold text-gray-900">
+              Ganhos dos Entregadores
+            </h2>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="mb-1 block text-sm font-medium text-gray-900">
+            Entregador
+          </label>
+
+          <select
+            value={selectedEarningsCourierId}
+            onChange={(e) =>
+              setSelectedEarningsCourierId(e.target.value)
+            }
+            className="w-full rounded-lg border px-3 py-2 text-gray-900"
+            disabled={isLoadingCouriers}
+          >
+            <option value="" className="text-gray-900">
+              {isLoadingCouriers
+                ? 'Carregando entregadores...'
+                : 'Selecione um entregador'}
+            </option>
+
+            {couriers.map((courier) => (
+              <option
+                key={courier.id}
+                value={courier.id}
+                className="text-gray-900"
+              >
+                {courier.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => applyEarningsQuickFilter('today')}
+            className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'today'
+              ? 'bg-blue-600 text-white'
+              : 'border bg-white'
+              }`}
+          >
+            Hoje
+          </button>
+
+          <button
+            type="button"
+            onClick={() => applyEarningsQuickFilter('yesterday')}
+            className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'yesterday'
+              ? 'bg-blue-600 text-white'
+              : 'border bg-white'
+              }`}
+          >
+            Ontem
+          </button>
+
+          <button
+            type="button"
+            onClick={() => applyEarningsQuickFilter('last7')}
+            className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'last7'
+              ? 'bg-blue-600 text-white'
+              : 'border bg-white'
+              }`}
+          >
+            Últimos 7 dias
+          </button>
+
+          <button
+            type="button"
+            onClick={() => applyEarningsQuickFilter('month')}
+            className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'month'
+              ? 'bg-blue-600 text-white'
+              : 'border bg-white'
+              }`}
+          >
+            Este mês
+          </button>
+
+          <button
+            type="button"
+            onClick={() => applyEarningsQuickFilter('all')}
+            className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'all'
+              ? 'bg-blue-600 text-white'
+              : 'border bg-white'
+              }`}
+          >
+            Todos
+          </button>
+        </div>
+
+        <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-900">
+              De
+            </label>
+
+            <input
+              type="date"
+              value={earningsFilterFrom}
+              onChange={(e) => {
+                setEarningsFilterFrom(e.target.value);
+                setActiveEarningsQuickFilter('');
+              }}
+              className="w-full rounded-lg border px-3 py-2 text-gray-900"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-900">
+              Até
+            </label>
+
+            <input
+              type="date"
+              value={earningsFilterTo}
+              onChange={(e) => {
+                setEarningsFilterTo(e.target.value);
+                setActiveEarningsQuickFilter('');
+              }}
+              className="w-full rounded-lg border px-3 py-2 text-gray-900"
+            />
+          </div>
+        </div>
+
+        <div className="mb-4 rounded-lg border p-4">
+          <div className="text-sm text-gray-700">
+            <div className="mb-1 font-semibold text-gray-900">
+              {couriers.find(
+                (courier) =>
+                  courier.id === selectedEarningsCourierId
+              )?.name || 'Entregador'}
+            </div>
+            Total Acumulado
+          </div>
+
+          <div className="mt-1 text-2xl font-bold text-gray-900">
+            R$ {totalEarnings.toFixed(2).replace('.', ',')}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {isLoadingEarnings && (
+            <div className="flex items-center gap-2 py-4 text-sm text-gray-700">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Carregando ganhos...
+            </div>
+          )}
+
+          {!isLoadingEarnings && earningsError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+              {earningsError}
+            </div>
+          )}
+
+          {!isLoadingEarnings &&
+            !earningsError &&
+            selectedEarningsCourierId &&
+            earnings.length === 0 && (
+              <div className="rounded-lg border p-4 text-sm text-gray-700">
+                Nenhum ganho encontrado para o período selecionado.
+              </div>
+            )}
+
+          {!isLoadingEarnings &&
+            !earningsError &&
+            earnings.length > 0 &&
+            earnings.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between rounded-lg border p-4"
+              >
+                <div>
+                  <div className="font-medium text-gray-900">
+                    {item.tracking_code}
+                  </div>
+
+                  <div className="text-sm text-gray-700">
+                    {item.created_at}
+                  </div>
+                </div>
+
+                <div className="font-semibold text-gray-900">
+                  + R$ {Number(item.delivery_fee || 0)
+                    .toFixed(2)
+                    .replace('.', ',')}
+                </div>
+              </div>
+            ))}
+        </div>
+
+
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
 
           <div className="p-4 border-b border-slate-100">
@@ -632,12 +1019,11 @@ export default function SupervisorPage() {
                         'today'
                       )
                     }
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                      activeQuickFilter ===
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter ===
                       'today'
-                        ? 'bg-[#002B5C] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                      ? 'bg-[#002B5C] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     Hoje
                   </button>
@@ -649,12 +1035,11 @@ export default function SupervisorPage() {
                         'yesterday'
                       )
                     }
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                      activeQuickFilter ===
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter ===
                       'yesterday'
-                        ? 'bg-[#002B5C] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                      ? 'bg-[#002B5C] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     Ontem
                   </button>
@@ -666,12 +1051,11 @@ export default function SupervisorPage() {
                         'last7'
                       )
                     }
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                      activeQuickFilter ===
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter ===
                       'last7'
-                        ? 'bg-[#002B5C] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                      ? 'bg-[#002B5C] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     Últimos 7 dias
                   </button>
@@ -683,12 +1067,11 @@ export default function SupervisorPage() {
                         'month'
                       )
                     }
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                      activeQuickFilter ===
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter ===
                       'month'
-                        ? 'bg-[#002B5C] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                      ? 'bg-[#002B5C] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     Este mês
                   </button>
@@ -700,12 +1083,11 @@ export default function SupervisorPage() {
                         'all'
                       )
                     }
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                      activeQuickFilter ===
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter ===
                       'all'
-                        ? 'bg-[#002B5C] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                      ? 'bg-[#002B5C] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     Todos
                   </button>
@@ -1054,7 +1436,7 @@ export default function SupervisorPage() {
 
                                 {Number(
                                   item.delivery_fee ||
-                                    0
+                                  0
                                 ).toFixed(2)}
 
                               </span>
