@@ -225,7 +225,7 @@ export default function SupervisorPage() {
   };
 
   const fetchEarnings = useCallback(async () => {
-    
+
     if (!selectedEarningsCourierId) {
       setEarnings([]);
       return;
@@ -258,7 +258,7 @@ export default function SupervisorPage() {
       );
 
       const data = await res.json();
-      
+
 
       if (!res.ok) {
         throw new Error(
@@ -374,7 +374,7 @@ export default function SupervisorPage() {
         event.data
       );
 
-      
+
 
       /*
        * O Push apenas dispara uma nova busca.
@@ -726,7 +726,7 @@ export default function SupervisorPage() {
 
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
 
             <PushNotificationButton />
 
