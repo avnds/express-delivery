@@ -13,9 +13,12 @@ import {
   Trash2,
   Download,
   LogOut,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import UserManagement from '@/components/supervisor/UserManagement';
+import ClientManagement from '@/components/supervisor/ClientManagement';
 import PushNotificationButton from '@/components/PushNotificationButton';
 
 interface Courier {
@@ -52,13 +55,33 @@ export default function SupervisorPage() {
   const router = useRouter();
   const [deliveries, setDeliveries] = useState<DeliveryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const [isClientManagementOpen, setIsClientManagementOpen] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [couriers, setCouriers] = useState<Courier[]>([]);
   const [isLoadingCouriers, setIsLoadingCouriers] = useState(true);
-  const [filterFrom, setFilterFrom] = useState('');
-  const [filterTo, setFilterTo] = useState('');
+  const [filterFrom, setFilterFrom] = useState(() => {
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  });
+
+  const [filterTo, setFilterTo] = useState(() => {
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  });
   const [activeQuickFilter, setActiveQuickFilter] = useState('today');
+  const [isEarningsOpen, setIsEarningsOpen] = useState(false);
 
   // Estados dos ganhos dos entregadores
   const [selectedEarningsCourierId, setSelectedEarningsCourierId] =
@@ -791,204 +814,279 @@ export default function SupervisorPage() {
           </div>
         </div>
 
-        <UserManagement />
-
-        <div className="mt-6 rounded-xl border bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
-            <h2 className="text-xl font-semibold text-gray-900">
-              Ganhos dos Entregadores
-            </h2>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium text-gray-900">
-            Entregador
-          </label>
-
-          <select
-            value={selectedEarningsCourierId}
-            onChange={(e) =>
-              setSelectedEarningsCourierId(e.target.value)
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <button
+            type="button"
+            onClick={() =>
+              setIsUserManagementOpen((prev) => !prev)
             }
-            className="w-full rounded-lg border px-3 py-2 text-gray-900"
-            disabled={isLoadingCouriers}
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition"
           >
-            <option value="" className="text-gray-900">
-              {isLoadingCouriers
-                ? 'Carregando entregadores...'
-                : 'Selecione um entregador'}
-            </option>
+            <div className="flex items-center gap-2">
+              {isUserManagementOpen ? (
+                <ChevronDown className="h-4 w-4 text-[#002B5C]" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-[#002B5C]" />
+              )}
 
-            {couriers.map((courier) => (
-              <option
-                key={courier.id}
-                value={courier.id}
-                className="text-gray-900"
-              >
-                {courier.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="mb-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => applyEarningsQuickFilter('today')}
-            className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'today'
-              ? 'bg-blue-600 text-white'
-              : 'border bg-white'
-              }`}
-          >
-            Hoje
-          </button>
-
-          <button
-            type="button"
-            onClick={() => applyEarningsQuickFilter('yesterday')}
-            className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'yesterday'
-              ? 'bg-blue-600 text-white'
-              : 'border bg-white'
-              }`}
-          >
-            Ontem
-          </button>
-
-          <button
-            type="button"
-            onClick={() => applyEarningsQuickFilter('last7')}
-            className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'last7'
-              ? 'bg-blue-600 text-white'
-              : 'border bg-white'
-              }`}
-          >
-            Últimos 7 dias
-          </button>
-
-          <button
-            type="button"
-            onClick={() => applyEarningsQuickFilter('month')}
-            className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'month'
-              ? 'bg-blue-600 text-white'
-              : 'border bg-white'
-              }`}
-          >
-            Este mês
-          </button>
-
-          <button
-            type="button"
-            onClick={() => applyEarningsQuickFilter('all')}
-            className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'all'
-              ? 'bg-blue-600 text-white'
-              : 'border bg-white'
-              }`}
-          >
-            Todos
-          </button>
-        </div>
-
-        <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">
-              De
-            </label>
-
-            <input
-              type="date"
-              value={earningsFilterFrom}
-              onChange={(e) => {
-                setEarningsFilterFrom(e.target.value);
-                setActiveEarningsQuickFilter('');
-              }}
-              className="w-full rounded-lg border px-3 py-2 text-gray-900"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-900">
-              Até
-            </label>
-
-            <input
-              type="date"
-              value={earningsFilterTo}
-              onChange={(e) => {
-                setEarningsFilterTo(e.target.value);
-                setActiveEarningsQuickFilter('');
-              }}
-              className="w-full rounded-lg border px-3 py-2 text-gray-900"
-            />
-          </div>
-        </div>
-
-        <div className="mb-4 rounded-lg border p-4">
-          <div className="text-sm text-gray-700">
-            <div className="mb-1 font-semibold text-gray-900">
-              {couriers.find(
-                (courier) =>
-                  courier.id === selectedEarningsCourierId
-              )?.name || 'Entregador'}
+              <span className="font-bold text-xs text-slate-800 uppercase tracking-wider">
+                Cadastro de Usuário
+              </span>
             </div>
-            Total Acumulado
-          </div>
+          </button>
 
-          <div className="mt-1 text-2xl font-bold text-gray-900">
-            R$ {totalEarnings.toFixed(2).replace('.', ',')}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {isLoadingEarnings && (
-            <div className="flex items-center gap-2 py-4 text-sm text-gray-700">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Carregando ganhos...
+          {isUserManagementOpen && (
+            <div className="border-t border-slate-100">
+              <UserManagement />
             </div>
           )}
+        </div>
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <button
+            type="button"
+            onClick={() =>
+              setIsClientManagementOpen((prev) => !prev)
+            }
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition"
+          >
+            <div className="flex items-center gap-2">
+              {isClientManagementOpen ? (
+                <ChevronDown className="h-4 w-4 text-[#002B5C]" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-[#002B5C]" />
+              )}
 
-          {!isLoadingEarnings && earningsError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-              {earningsError}
+              <span className="font-bold text-xs text-slate-800 uppercase tracking-wider">
+                Clientes
+              </span>
+            </div>
+          </button>
+
+          {isClientManagementOpen && (
+            <div className="border-t border-slate-100">
+              <ClientManagement />
             </div>
           )}
+        </div>
 
-          {!isLoadingEarnings &&
-            !earningsError &&
-            selectedEarningsCourierId &&
-            earnings.length === 0 && (
-              <div className="rounded-lg border p-4 text-sm text-gray-700">
-                Nenhum ganho encontrado para o período selecionado.
+        <div className="mt-6 rounded-xl border bg-white shadow-sm overflow-hidden">
+          <button
+            type="button"
+            onClick={() =>
+              setIsEarningsOpen((prev) => !prev)
+            }
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition"
+          >
+            <div className="flex items-center gap-2">
+              {isEarningsOpen ? (
+                <ChevronDown className="h-5 w-5 text-[#002B5C]" />
+              ) : (
+                <ChevronRight className="h-5 w-5 text-[#002B5C]" />
+              )}
+
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-[#002B5C]" />
+
+                <h2 className="text-xl font-semibold text-[#002B5C]">
+                  Ganhos dos Entregadores
+                </h2>
               </div>
-            )}
+            </div>
+          </button>
 
-          {!isLoadingEarnings &&
-            !earningsError &&
-            earnings.length > 0 &&
-            earnings.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between rounded-lg border p-4"
-              >
+          {isEarningsOpen && (
+            <div className="border-t border-slate-100 p-6">
+
+              <div className="mb-4">
+                <label className="mb-1 block text-sm font-medium text-gray-900">
+                  Entregador
+                </label>
+
+                <select
+                  value={selectedEarningsCourierId}
+                  onChange={(e) =>
+                    setSelectedEarningsCourierId(e.target.value)
+                  }
+                  className="w-full rounded-lg border px-3 py-2 text-gray-900"
+                  disabled={isLoadingCouriers}
+                >
+                  <option value="" className="text-gray-900">
+                    {isLoadingCouriers
+                      ? 'Carregando entregadores...'
+                      : 'Selecione um entregador'}
+                  </option>
+
+                  {couriers.map((courier) => (
+                    <option
+                      key={courier.id}
+                      value={courier.id}
+                      className="text-gray-900"
+                    >
+                      {courier.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => applyEarningsQuickFilter('today')}
+                  className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'today'
+                    ? 'bg-blue-600 text-white'
+                    : 'border bg-white'
+                    }`}
+                >
+                  Hoje
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyEarningsQuickFilter('yesterday')}
+                  className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'yesterday'
+                    ? 'bg-blue-600 text-white'
+                    : 'border bg-white'
+                    }`}
+                >
+                  Ontem
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyEarningsQuickFilter('last7')}
+                  className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'last7'
+                    ? 'bg-blue-600 text-white'
+                    : 'border bg-white'
+                    }`}
+                >
+                  Últimos 7 dias
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyEarningsQuickFilter('month')}
+                  className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'month'
+                    ? 'bg-blue-600 text-white'
+                    : 'border bg-white'
+                    }`}
+                >
+                  Este mês
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyEarningsQuickFilter('all')}
+                  className={`rounded-lg px-3 py-2 text-sm text-gray-900 ${activeEarningsQuickFilter === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'border bg-white'
+                    }`}
+                >
+                  Todos
+                </button>
+              </div>
+
+              <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <div className="font-medium text-gray-900">
-                    {item.tracking_code}
-                  </div>
+                  <label className="mb-1 block text-sm font-medium text-gray-900">
+                    De
+                  </label>
 
-                  <div className="text-sm text-gray-700">
-                    {item.created_at}
-                  </div>
+                  <input
+                    type="date"
+                    value={earningsFilterFrom}
+                    onChange={(e) => {
+                      setEarningsFilterFrom(e.target.value);
+                      setActiveEarningsQuickFilter('');
+                    }}
+                    className="w-full rounded-lg border px-3 py-2 text-gray-900"
+                  />
                 </div>
 
-                <div className="font-semibold text-gray-900">
-                  + R$ {Number(item.delivery_fee || 0)
-                    .toFixed(2)
-                    .replace('.', ',')}
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-900">
+                    Até
+                  </label>
+
+                  <input
+                    type="date"
+                    value={earningsFilterTo}
+                    onChange={(e) => {
+                      setEarningsFilterTo(e.target.value);
+                      setActiveEarningsQuickFilter('');
+                    }}
+                    className="w-full rounded-lg border px-3 py-2 text-gray-900"
+                  />
                 </div>
               </div>
-            ))}
-        </div>
 
+              <div className="mb-4 rounded-lg border p-4">
+                <div className="text-sm text-gray-700">
+                  <div className="mb-1 font-semibold text-gray-900">
+                    {couriers.find(
+                      (courier) =>
+                        courier.id === selectedEarningsCourierId
+                    )?.name || 'Entregador'}
+                  </div>
+                  Total Acumulado
+                </div>
+
+                <div className="mt-1 text-2xl font-bold text-gray-900">
+                  R$ {totalEarnings.toFixed(2).replace('.', ',')}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {isLoadingEarnings && (
+                  <div className="flex items-center gap-2 py-4 text-sm text-gray-700">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Carregando ganhos...
+                  </div>
+                )}
+
+                {!isLoadingEarnings && earningsError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+                    {earningsError}
+                  </div>
+                )}
+
+                {!isLoadingEarnings &&
+                  !earningsError &&
+                  selectedEarningsCourierId &&
+                  earnings.length === 0 && (
+                    <div className="rounded-lg border p-4 text-sm text-gray-700">
+                      Nenhum ganho encontrado para o período selecionado.
+                    </div>
+                  )}
+
+                {!isLoadingEarnings &&
+                  !earningsError &&
+                  earnings.length > 0 &&
+                  earnings.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between rounded-lg border p-4"
+                    >
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {item.tracking_code}
+                        </div>
+
+                        <div className="text-sm text-gray-700">
+                          {item.created_at}
+                        </div>
+                      </div>
+
+                      <div className="font-semibold text-gray-900">
+                        + R$ {Number(item.delivery_fee || 0)
+                          .toFixed(2)
+                          .replace('.', ',')}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+
+            </div>
+          )}
+        </div>
 
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
 

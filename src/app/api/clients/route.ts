@@ -14,45 +14,57 @@ export async function GET(request: Request) {
         }
 
         const { searchParams } = new URL(request.url);
-        const phone = (searchParams.get('phone') || '').replace(/\D/g, '');
 
-        if (!phone) {
-            return NextResponse.json(
-                { error: 'Informe o telefone.' },
-                { status: 400 }
-            );
+        const name = (searchParams.get('name') || '').trim();
+
+        const phone = (searchParams.get('phone') || '')
+            .replace(/\D/g, '');
+
+        let sql = `
+            SELECT
+                id,
+                phone,
+                name,
+                address,
+                created_at,
+                updated_at
+            FROM clients
+        `;
+
+        const conditions: string[] = [];
+        const args: string[] = [];
+
+        if (name) {
+            conditions.push('LOWER(name) LIKE LOWER(?)');
+            args.push(`%${name}%`);
         }
+
+        if (phone) {
+            conditions.push('phone LIKE ?');
+            args.push(`%${phone}%`);
+        }
+
+        if (conditions.length > 0) {
+            sql += ` WHERE ${conditions.join(' AND ')}`;
+        }
+
+        sql += `
+            ORDER BY name COLLATE NOCASE ASC
+        `;
 
         const result = await db.execute({
-            sql: `
-        SELECT
-          id,
-          phone,
-          name,
-          address,
-          created_at,
-          updated_at
-        FROM clients
-        WHERE phone = ?
-        LIMIT 1
-      `,
-            args: [phone],
+            sql,
+            args,
         });
 
-        if (result.rows.length === 0) {
-            return NextResponse.json({
-                client: null,
-            });
-        }
-
         return NextResponse.json({
-            client: result.rows[0],
+            clients: result.rows,
         });
     } catch (error) {
         console.error('Erro na API GET /api/clients:', error);
 
         return NextResponse.json(
-            { error: 'Erro ao buscar cliente.' },
+            { error: 'Erro ao buscar clientes.' },
             { status: 500 }
         );
     }
