@@ -80,7 +80,7 @@ export default function PushNotificationButton() {
         <button
             type="button"
             onClick={enableNotifications}
-            className="px-4 py-2 rounded-lg bg-[#002B5C] text-white font-bold"
+            className="px-3 py-2 bg-[#002B5C] hover:bg-[#00234D] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-sm"
         >
             {status}
         </button>

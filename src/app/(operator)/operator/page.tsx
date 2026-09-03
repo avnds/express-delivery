@@ -870,7 +870,9 @@ export default function OperatorPage() {
             CABEÇALHO
         ====================================================== */}
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-[#FF6600] pb-4">
 
           <div className="flex items-center gap-3">
 
@@ -883,7 +885,7 @@ export default function OperatorPage() {
             </div>
 
             <div>
-              <h1 className="text-xl font-black text-slate-900">
+              <h1 className="text-2xl font-black text-[#002B5C] tracking-tight">
                 Painel do Operador
               </h1>
 
@@ -943,8 +945,11 @@ export default function OperatorPage() {
               </span>
             </button>
 
+
           </div>
+
         </div>
+
 
         {/* =====================================================
             NOVA ENTREGA
