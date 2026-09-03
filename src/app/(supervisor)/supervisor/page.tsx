@@ -756,7 +756,7 @@ export default function SupervisorPage() {
             <button
               onClick={handleExportTxt}
               disabled={isExporting}
-              className="px-3 py-2 bg-[#002B5C] hover:bg-[#00234D] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-sm disabled:opacity-50"
+              className="px-3 py-2 bg-[#002B5C] hover:bg-[#00234D] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition shadow-sm"
             >
               {isExporting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -887,7 +887,7 @@ export default function SupervisorPage() {
               <div className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-[#002B5C]" />
 
-                <h2 className="text-xl font-semibold text-[#002B5C]">
+                <h2 className="font-bold text-xs text-slate-800 uppercase tracking-wider">
                   Ganhos dos Entregadores
                 </h2>
               </div>
@@ -1095,7 +1095,7 @@ export default function SupervisorPage() {
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
 
               <div>
-                <h2 className="font-bold text-xs text-slate-700 uppercase tracking-wider">
+                <h2 className="font-bold text-xs text-slate-800 uppercase tracking-wider">
                   Ordens Registradas ({deliveries.length})
                 </h2>
 
