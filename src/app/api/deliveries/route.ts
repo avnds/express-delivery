@@ -181,6 +181,12 @@ export async function POST(request: Request) {
 
     const fee = parseFloat(delivery_fee) || 0;
 
+    // Normaliza o telefone para salvar somente números.
+    const normalizedPhone =
+      typeof phone === 'string'
+        ? phone.replace(/\D/g, '')
+        : '';
+
     await db.execute({
       sql: `
         INSERT INTO deliveries (
@@ -201,7 +207,7 @@ export async function POST(request: Request) {
         id,
         tracking_code,
         recipient_name,
-        phone || null,
+        normalizedPhone || null,
         address || '',
         latitude ?? null,
         longitude ?? null,
@@ -209,6 +215,49 @@ export async function POST(request: Request) {
         courierId,
       ],
     });
+
+    /*
+ * CLIENTE
+ *
+ * Se houver telefone, verificamos se o cliente já existe.
+ * Caso não exista, cadastramos automaticamente.
+ *
+ * Não existe FK entre clients e deliveries.
+ * A entrega mantém sua própria cópia dos dados.
+ */
+    if (normalizedPhone) {
+      const existingClient = await db.execute({
+        sql: `
+          SELECT id
+          FROM clients
+          WHERE phone = ?
+          LIMIT 1
+        `,
+        args: [normalizedPhone],
+      });
+
+      if (existingClient.rows.length === 0) {
+        const clientId = crypto.randomUUID();
+
+        await db.execute({
+          sql: `
+            INSERT INTO clients (
+              id,
+              phone,
+              name,
+              address
+            )
+            VALUES (?, ?, ?, ?)
+          `,
+          args: [
+            clientId,
+            normalizedPhone,
+            recipient_name.trim(),
+            (address || '').trim(),
+          ],
+        });
+      }
+    }
 
     /*
      * NOVA ENTREGA
