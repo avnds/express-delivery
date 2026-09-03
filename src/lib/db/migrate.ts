@@ -166,7 +166,7 @@ const migrations = [
       console.log('✓ Migration 002 concluída.');
     },
   },
-    {
+  {
     version: '003_push_notifications',
     run: async () => {
       console.log('Aplicando Migration 003...');
@@ -194,6 +194,33 @@ const migrations = [
 
       console.log('✓ Tabela push_subscriptions criada.');
       console.log('✓ Migration 003 concluída.');
+    },
+  },
+
+
+  {
+    version: '004_clients',
+    run: async () => {
+      console.log('Aplicando Migration 004...');
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS clients (
+          id TEXT PRIMARY KEY,
+          phone TEXT NOT NULL UNIQUE,
+          name TEXT NOT NULL,
+          address TEXT NOT NULL,
+          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      await client.execute(`
+        CREATE INDEX IF NOT EXISTS idx_clients_phone
+        ON clients(phone);
+      `);
+
+      console.log('✓ Tabela clients criada.');
+      console.log('✓ Migration 004 concluída.');
     },
   },
 ];
