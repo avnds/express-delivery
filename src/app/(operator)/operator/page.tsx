@@ -10,7 +10,6 @@ import {
 import {
   PackagePlus,
   Loader2,
-  MapPin,
   CheckCircle2,
   RefreshCw,
   Phone,
@@ -26,20 +25,7 @@ import {
 import { useRouter } from 'next/navigation';
 import PushNotificationButton from '@/components/PushNotificationButton';
 
-interface AddressSuggestion {
-  place_id: number;
-  display_name: string;
-  lat: string;
-  lon: string;
-  address?: {
-    road?: string;
-    house_number?: string;
-    suburb?: string;
-    city?: string;
-    town?: string;
-    municipality?: string;
-  };
-}
+
 
 interface Courier {
   id: string;
@@ -120,12 +106,7 @@ export default function OperatorPage() {
   const [filterTo, setFilterTo] = useState(getToday);
   const [activeQuickFilter, setActiveQuickFilter] = useState('today');
 
-  // ============================================================
-  // BUSCA DE ENDEREÇO
-  // ============================================================
 
-  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
-  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
 
   // ============================================================
   // CADASTRO
@@ -392,71 +373,64 @@ export default function OperatorPage() {
     };
   }, [fetchDeliveries]);
 
+
+
   // ============================================================
-  // BUSCA DE ENDEREÇO - NOVA ENTREGA
+  // BUSCAR CLIENTE PELO TELEFONE
   // ============================================================
 
-  useEffect(() => {
-    if (
-      address.trim().length < 3 ||
-      latitude !== null
-    ) {
-      setSuggestions([]);
+  // ============================================================
+  // BUSCAR CLIENTE PELO TELEFONE
+  // ============================================================
+
+  const handleSearchClient = async () => {
+    const normalizedPhone = phone.replace(/\D/g, '');
+
+    if (!normalizedPhone) {
       return;
     }
 
-    const controller = new AbortController();
-
-    const timer = setTimeout(async () => {
-      setIsSearchingAddress(true);
-
-      try {
-        const response = await fetch(
-          `/api/geocode?q=${encodeURIComponent(address)}`,
-          {
-            method: 'GET',
-            cache: 'no-store',
-            signal: controller.signal,
-          }
-        );
-
-        if (!response.ok) {
-          setSuggestions([]);
-          return;
+    try {
+      const response = await fetch(
+        `/api/clients?phone=${encodeURIComponent(
+          normalizedPhone
+        )}`,
+        {
+          method: 'GET',
+          cache: 'no-store',
         }
+      );
 
-        const data = await response.json();
-
-        if (Array.isArray(data)) {
-          setSuggestions(data);
-        } else {
-          setSuggestions([]);
-        }
-      } catch (error) {
-        if (
-          error instanceof DOMException &&
-          error.name === 'AbortError'
-        ) {
-          return;
-        }
-
+      if (!response.ok) {
         console.error(
-          'Erro ao buscar sugestões:',
-          error
+          'Erro ao buscar cliente:',
+          response.status
+        );
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data?.client) {
+        setRecipientName(
+          data.client.name || ''
         );
 
-        setSuggestions([]);
-      } finally {
-        setIsSearchingAddress(false);
+        setAddress(
+          data.client.address || ''
+        );
+
+        setLatitude(null);
+        setLongitude(null);
+
       }
-    }, 500);
-
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [address, latitude]);
-
+    } catch (error) {
+      console.error(
+        'Erro ao buscar cliente pelo telefone:',
+        error
+      );
+    }
+  };
   // ============================================================
   // ALTERAÇÃO DE ENDEREÇO - NOVA ENTREGA
   // ============================================================
@@ -470,65 +444,7 @@ export default function OperatorPage() {
     setLongitude(null);
   };
 
-  // ============================================================
-  // SELECIONAR SUGESTÃO
-  // ============================================================
 
-  const handleSelectSuggestion = (
-    suggestion: AddressSuggestion
-  ) => {
-    const addr = suggestion.address;
-
-    if (addr?.road) {
-      const street = addr.road;
-
-      const number = addr.house_number
-        ? `, ${addr.house_number}`
-        : '';
-
-      const neighborhood = addr.suburb
-        ? ` - ${addr.suburb}`
-        : '';
-
-      const city =
-        addr.city ||
-        addr.town ||
-        addr.municipality;
-
-      const cityText = city
-        ? ` (${city})`
-        : '';
-
-      const formattedAddress =
-        `${street}${number}${neighborhood}${cityText}`;
-
-      setAddress(formattedAddress);
-    } else {
-      setAddress(suggestion.display_name);
-    }
-
-    const parsedLatitude = Number.parseFloat(
-      suggestion.lat
-    );
-
-    const parsedLongitude = Number.parseFloat(
-      suggestion.lon
-    );
-
-    setLatitude(
-      Number.isFinite(parsedLatitude)
-        ? parsedLatitude
-        : null
-    );
-
-    setLongitude(
-      Number.isFinite(parsedLongitude)
-        ? parsedLongitude
-        : null
-    );
-
-    setSuggestions([]);
-  };
 
   // ============================================================
   // CADASTRAR NOVA ENTREGA
@@ -582,9 +498,8 @@ export default function OperatorPage() {
 
       if (!response.ok) {
         alert(
-          `Erro ao criar entrega: ${
-            data?.error ||
-            'Falha no servidor.'
+          `Erro ao criar entrega: ${data?.error ||
+          'Falha no servidor.'
           }`
         );
 
@@ -604,7 +519,7 @@ export default function OperatorPage() {
       setCourierId('');
       setLatitude(null);
       setLongitude(null);
-      setSuggestions([]);
+
 
       // Atualizar lista imediatamente.
       await fetchDeliveries(true);
@@ -683,7 +598,7 @@ export default function OperatorPage() {
 
     setEditDeliveryFee(
       item.delivery_fee !== undefined &&
-      item.delivery_fee !== null
+        item.delivery_fee !== null
         ? String(item.delivery_fee)
         : ''
     );
@@ -759,8 +674,8 @@ export default function OperatorPage() {
             delivery_fee:
               editDeliveryFee.trim() !== ''
                 ? Number.parseFloat(
-                    editDeliveryFee
-                  )
+                  editDeliveryFee
+                )
                 : 0,
 
             courier_id:
@@ -775,10 +690,9 @@ export default function OperatorPage() {
 
       if (!response.ok) {
         alert(
-          `Erro ao atualizar entrega${
-            data?.error
-              ? `: ${data.error}`
-              : '.'
+          `Erro ao atualizar entrega${data?.error
+            ? `: ${data.error}`
+            : '.'
           }`
         );
 
@@ -833,10 +747,9 @@ export default function OperatorPage() {
 
       if (!response.ok) {
         alert(
-          `Erro ao atualizar status${
-            data?.error
-              ? `: ${data.error}`
-              : '.'
+          `Erro ao atualizar status${data?.error
+            ? `: ${data.error}`
+            : '.'
           }`
         );
 
@@ -981,7 +894,7 @@ export default function OperatorPage() {
 
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center gap-2 flex-wrap justify-end self-start sm:self-auto">
 
             <PushNotificationButton />
 
@@ -993,11 +906,10 @@ export default function OperatorPage() {
               className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-[#FF6600] bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition"
             >
               <RefreshCw
-                className={`h-4 w-4 ${
-                  isLoadingDeliveries
-                    ? 'animate-spin'
-                    : ''
-                }`}
+                className={`h-4 w-4 ${isLoadingDeliveries
+                  ? 'animate-spin'
+                  : ''
+                  }`}
               />
 
               <span>
@@ -1116,17 +1028,32 @@ export default function OperatorPage() {
                 Telefone / WhatsApp
               </label>
 
-              <input
-                type="text"
-                placeholder="Ex: (85) 99999-9999"
-                value={phone}
-                onChange={(event) =>
-                  setPhone(
-                    event.target.value
-                  )
-                }
-                className="w-full text-xs p-3 border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#002B5C]"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ex: (85) 99999-9999"
+                  value={phone}
+                  onChange={(event) =>
+                    setPhone(event.target.value)
+                  }
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      handleSearchClient();
+                    }
+                  }}
+                  className="flex-1 text-xs p-3 border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#002B5C]"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleSearchClient}
+                  className="px-3 rounded-xl bg-[#002B5C] text-white hover:bg-[#00234D] transition flex items-center justify-center"
+                  title="Buscar cliente"
+                >
+                  <Phone className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Taxa */}
@@ -1196,83 +1123,27 @@ export default function OperatorPage() {
               </select>
             </div>
 
+
+
             {/* Endereço */}
 
-            <div className="md:col-span-2 lg:col-span-2 relative">
+            <div className="md:col-span-2 lg:col-span-2">
 
               <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                Endereço com Busca GPS
+                Endereço
               </label>
 
-              <div className="relative">
-
-                <input
-                  type="text"
-                  placeholder="Ex: Rua Firmino Rocha Aguiar, 1835 - Fortaleza"
-                  value={address}
-                  onChange={(event) =>
-                    handleAddressChange(
-                      event.target.value
-                    )
-                  }
-                  className="w-full text-xs p-3 pr-10 border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#002B5C]"
-                />
-
-                {isSearchingAddress && (
-                  <div className="absolute right-3 top-3">
-                    <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                  </div>
-                )}
-
-              </div>
-
-              {/* Sugestões */}
-
-              {suggestions.length > 0 && (
-                <ul className="absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto divide-y divide-slate-100">
-
-                  {suggestions.map(
-                    (item) => (
-                      <li
-                        key={item.place_id}
-                        onClick={() =>
-                          handleSelectSuggestion(
-                            item
-                          )
-                        }
-                        className="p-3 text-xs text-slate-700 hover:bg-slate-50 cursor-pointer flex items-start gap-2"
-                      >
-
-                        <MapPin className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
-
-                        <span>
-                          {item.display_name}
-                        </span>
-
-                      </li>
-                    )
-                  )}
-
-                </ul>
-              )}
-
-              {/* Coordenadas */}
-
-              {latitude !== null &&
-                longitude !== null && (
-                  <div className="mt-2 p-2 bg-slate-100 rounded-lg text-[11px] font-mono text-slate-600 flex items-center gap-1.5">
-
-                    <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-
-                    <span>
-                      GPS:{' '}
-                      {latitude.toFixed(6)}
-                      {', '}
-                      {longitude.toFixed(6)}
-                    </span>
-
-                  </div>
-                )}
+              <input
+                type="text"
+                placeholder="Ex: Rua Firmino Rocha Aguiar, 1835 - Fortaleza"
+                value={address}
+                onChange={(event) =>
+                  handleAddressChange(
+                    event.target.value
+                  )
+                }
+                className="w-full text-xs p-3 border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#002B5C]"
+              />
 
             </div>
 
@@ -1348,12 +1219,11 @@ export default function OperatorPage() {
                         'today'
                       )
                     }
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                      activeQuickFilter ===
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter ===
                       'today'
-                        ? 'bg-[#002B5C] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                      ? 'bg-[#002B5C] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     Hoje
                   </button>
@@ -1365,12 +1235,11 @@ export default function OperatorPage() {
                         'yesterday'
                       )
                     }
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                      activeQuickFilter ===
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter ===
                       'yesterday'
-                        ? 'bg-[#002B5C] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                      ? 'bg-[#002B5C] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     Ontem
                   </button>
@@ -1382,12 +1251,11 @@ export default function OperatorPage() {
                         'last7'
                       )
                     }
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                      activeQuickFilter ===
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter ===
                       'last7'
-                        ? 'bg-[#002B5C] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                      ? 'bg-[#002B5C] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     Últimos 7 dias
                   </button>
@@ -1399,12 +1267,11 @@ export default function OperatorPage() {
                         'month'
                       )
                     }
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                      activeQuickFilter ===
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter ===
                       'month'
-                        ? 'bg-[#002B5C] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                      ? 'bg-[#002B5C] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     Este mês
                   </button>
@@ -1416,12 +1283,11 @@ export default function OperatorPage() {
                         'all'
                       )
                     }
-                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${
-                      activeQuickFilter ===
+                    className={`px-3 py-2 text-xs font-semibold rounded-lg transition ${activeQuickFilter ===
                       'all'
-                        ? 'bg-[#002B5C] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                      ? 'bg-[#002B5C] text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     Todos
                   </button>
@@ -1862,7 +1728,7 @@ export default function OperatorPage() {
 
                                 {Number(
                                   item.delivery_fee ??
-                                    0
+                                  0
                                 ).toFixed(2)}
 
                               </span>
