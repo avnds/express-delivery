@@ -578,27 +578,27 @@ export default function UserManagement() {
                         <Edit3 className="h-4 w-4" />
                         Alterar
                       </button>
-                      {/*{user.role !== 'SUPERVISOR' && (*/}
-                      {/*
-{user.role === 'COURIER' && (
-  <button
-    type="button"
-    onClick={() => handleDeleteUser(user)}
-    disabled={deletingUserId === user.id}
-    className="w-full sm:w-auto px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-50"
-  >
-    {deletingUserId === user.id ? (
-      <Loader2 className="h-4 w-4 animate-spin" />
-    ) : (
-      <Trash2 className="h-4 w-4" />
-    )}
+                      {/*{user.role === 'COURIER' && (*/}
 
-    {deletingUserId === user.id
-      ? 'Excluindo...'
-      : 'Excluir'}
-  </button>
-)}
-*/}
+                      {user.role !== 'SUPERVISOR' && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(user)}
+                          disabled={deletingUserId === user.id}
+                          className="w-full sm:w-auto px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-50"
+                        >
+                          {deletingUserId === user.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+
+                          {deletingUserId === user.id
+                            ? 'Excluindo...'
+                            : 'Excluir'}
+                        </button>
+                      )}
+
                     </div>
                   </div>
                 )}

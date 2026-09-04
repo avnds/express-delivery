@@ -411,18 +411,13 @@ export default function OperatorPage() {
 
       const data = await response.json();
 
-      if (data?.client) {
-        setRecipientName(
-          data.client.name || ''
-        );
+      const client = data?.clients?.[0];
 
-        setAddress(
-          data.client.address || ''
-        );
-
+      if (client) {
+        setRecipientName(client.name || '');
+        setAddress(client.address || '');
         setLatitude(null);
         setLongitude(null);
-
       }
     } catch (error) {
       console.error(
