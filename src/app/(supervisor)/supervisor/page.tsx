@@ -57,6 +57,25 @@ export default function SupervisorPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
   const [isClientManagementOpen, setIsClientManagementOpen] = useState(false);
+  useEffect(() => {
+    const openFromHash = () => {
+      switch (window.location.hash) {
+        case '#usuarios':
+          setIsUserManagementOpen(true);
+          break;
+        case '#clientes':
+          setIsClientManagementOpen(true);
+          break;
+        case '#ganhos':
+          setIsEarningsOpen(true);
+          break;
+      }
+    };
+    openFromHash();
+    window.addEventListener('hashchange', openFromHash);
+    return () => window.removeEventListener('hashchange', openFromHash);
+  }, []);
+
   const [isClearing, setIsClearing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [couriers, setCouriers] = useState<Courier[]>([]);
