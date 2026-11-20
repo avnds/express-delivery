@@ -179,6 +179,18 @@ export async function POST(request: Request) {
 
     const id = crypto.randomUUID();
 
+    // Sufixo da data local para facilitar a identificação da entrega.
+    const dateParts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'America/Fortaleza',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).formatToParts(new Date());
+    const dateValue = (type: string) =>
+      dateParts.find((part) => part.type === type)?.value ?? '';
+    const finalTrackingCode =
+      `${String(tracking_code).trim()}-${dateValue('day')}${dateValue('month')}${dateValue('year')}`;
+
     const fee = parseFloat(delivery_fee) || 0;
 
     // Normaliza o telefone para salvar somente números.
@@ -205,7 +217,7 @@ export async function POST(request: Request) {
       `,
       args: [
         id,
-        tracking_code,
+        finalTrackingCode,
         recipient_name,
         normalizedPhone || null,
         address || '',
@@ -274,7 +286,7 @@ export async function POST(request: Request) {
         await sendPushNotification(courierId, {
           type: 'NEW_DELIVERY',
           title: '🔔 Nova entrega disponível',
-          body: `Entrega ${tracking_code} disponível para você.`,
+          body: `Entrega ${finalTrackingCode} disponível para você.`,
           url: '/courier',
           deliveryId: id,
         });
@@ -342,7 +354,7 @@ export async function POST(request: Request) {
         message: 'Sucesso',
         delivery: {
           id,
-          tracking_code,
+          tracking_code: finalTrackingCode,
           courier_id: courierId,
         },
       },
