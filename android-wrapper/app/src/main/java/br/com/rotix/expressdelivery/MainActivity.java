@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.Build;
 import android.view.WindowInsets;
+import android.widget.FrameLayout;
+import android.view.ViewGroup;
+import android.graphics.Color;
 import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
@@ -19,18 +22,22 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         web = new WebView(this);
-        setContentView(web);
-        // Android 15+ enforces edge-to-edge for apps targeting API 35.
-        // Apply real system-bar and display-cutout insets to the WebView.
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(Color.WHITE);
+        root.addView(web, new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        setContentView(root);
         if (Build.VERSION.SDK_INT >= 35) {
             getWindow().setDecorFitsSystemWindows(false);
-            web.setOnApplyWindowInsetsListener((view, insets) -> {
+            root.setOnApplyWindowInsetsListener((view, insets) -> {
                 android.graphics.Insets safe = insets.getInsets(
-                    WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
-                view.setPadding(safe.left, safe.top, safe.right, safe.bottom);
+                    WindowInsets.Type.statusBars() |
+                    WindowInsets.Type.navigationBars() |
+                    WindowInsets.Type.displayCutout());
+                root.setPadding(safe.left, safe.top, safe.right, safe.bottom);
                 return insets;
             });
-            web.requestApplyInsets();
+            root.requestApplyInsets();
         }
         web.getSettings().setJavaScriptEnabled(true);
         web.getSettings().setDomStorageEnabled(true);
