@@ -65,8 +65,8 @@ public class MainActivity extends Activity {
             }
         });
         if (state != null) {
-            web.restoreState(state);
-            if (web.getUrl() == null) web.loadUrl(BASE + "/login");
+            android.webkit.WebBackForwardList history = web.restoreState(state);
+            if (history == null || history.getSize() == 0) web.loadUrl(BASE + "/login");
         } else {
             web.loadUrl(BASE + "/login");
         }
