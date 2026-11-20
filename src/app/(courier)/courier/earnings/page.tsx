@@ -183,13 +183,7 @@ export default function EarningsPage() {
     <div className="min-h-screen bg-slate-100 pb-12">
       <div className="bg-[#002B5C] text-white p-5 sticky top-0 z-40 shadow-md">
         <div className="max-w-md mx-auto flex items-center justify-between">
-          <Link
-            href="/courier"
-            className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 text-xs font-bold flex items-center gap-1 transition"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Voltar</span>
-          </Link>
+
 
           <h1 className="font-black text-sm tracking-tight">
             Extrato de Ganhos
