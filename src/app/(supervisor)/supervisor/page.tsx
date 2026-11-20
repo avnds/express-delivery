@@ -504,42 +504,42 @@ export default function SupervisorPage() {
   // ============================================================
   // APAGAR DADOS
   // ============================================================
-
-  const handleClearData = async () => {
-    const confirmation = window.confirm(
-      'ATENÇÃO: Tem certeza que deseja apagar todos os dados operacionais? Esta ação não pode ser desfeita.'
-    );
-
-    if (!confirmation) return;
-
-    try {
-      setIsClearing(true);
-
-      const res = await fetch(
-        '/api/supervisor/data',
-        {
-          method: 'DELETE',
-        }
+  /*
+    const handleClearData = async () => {
+      const confirmation = window.confirm(
+        'ATENÇÃO: Tem certeza que deseja apagar todos os dados operacionais? Esta ação não pode ser desfeita.'
       );
-
-      if (res.ok) {
-        alert(
-          'Dados operacionais apagados com sucesso!'
+  
+      if (!confirmation) return;
+  
+      try {
+        setIsClearing(true);
+  
+        const res = await fetch(
+          '/api/supervisor/data',
+          {
+            method: 'DELETE',
+          }
         );
-
-        fetchDeliveries(true);
-      } else {
-        alert('Erro ao apagar os dados.');
+  
+        if (res.ok) {
+          alert(
+            'Dados operacionais apagados com sucesso!'
+          );
+  
+          fetchDeliveries(true);
+        } else {
+          alert('Erro ao apagar os dados.');
+        }
+      } catch (error) {
+        alert(
+          'Erro de rede ao tentar limpar os dados.'
+        );
+      } finally {
+        setIsClearing(false);
       }
-    } catch (error) {
-      alert(
-        'Erro de rede ao tentar limpar os dados.'
-      );
-    } finally {
-      setIsClearing(false);
-    }
-  };
-
+    };
+  */
   // ============================================================
   // ALTERAÇÃO DE ENDEREÇO
   // ============================================================
@@ -768,23 +768,23 @@ export default function SupervisorPage() {
                 Salvar Histórico (.txt)
               </span>
             </button>
+            {/*
+              <button
+                onClick={handleClearData}
+                disabled={isClearing}
+                className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition disabled:opacity-50"
+              >
+                {isClearing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
 
-            <button
-              onClick={handleClearData}
-              disabled={isClearing}
-              className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition disabled:opacity-50"
-            >
-              {isClearing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="h-4 w-4" />
-              )}
-
-              <span>
-                Apagar Dados
-              </span>
-            </button>
-
+                <span>
+                  Apagar Dados
+                </span>
+              </button>
+            */}
             <button
               type="button"
               onClick={() =>
