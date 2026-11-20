@@ -12,6 +12,8 @@ import android.webkit.WebSettings;
 import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient.FileChooserParams;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebResourceRequest;
@@ -20,6 +22,10 @@ import android.net.Uri;
 import android.content.pm.PackageManager;
 public class MainActivity extends Activity {
     private WebView web;
+    private ValueCallback<Uri[]> pendingFileSelection;
+    private GeolocationPermissions.Callback pendingGeoCallback;
+    private String pendingGeoOrigin;
+    private static final int FILE_REQUEST = 43;
     private static final String BASE = "https://express-delivery-sigma.vercel.app";
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -63,9 +69,25 @@ public class MainActivity extends Activity {
             }
         });
         web.setWebChromeClient(new WebChromeClient() {
+            @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                if (pendingFileSelection != null) pendingFileSelection.onReceiveValue(null);
+                pendingFileSelection = callback;
+                try {
+                    startActivityForResult(params.createIntent(), FILE_REQUEST);
+                    return true;
+                } catch (Exception error) {
+                    pendingFileSelection = null;
+                    callback.onReceiveValue(null);
+                    return true;
+                }
+            }
             @Override public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
                 if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) callback.invoke(origin, true, false);
-                else { callback.invoke(origin, false, false); requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 42); }
+                else {
+                    pendingGeoOrigin = origin;
+                    pendingGeoCallback = callback;
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 42);
+                }
             }
         });
         if (state != null) {
@@ -91,6 +113,23 @@ public class MainActivity extends Activity {
             + "document.documentElement.style.colorScheme=dark?'dark':'light';"
             + "})();";
         web.evaluateJavascript(js, null);
+    }
+    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == FILE_REQUEST && pendingFileSelection != null) {
+            pendingFileSelection.onReceiveValue(
+                FileChooserParams.parseResult(resultCode, data));
+            pendingFileSelection = null;
+        }
+    }
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode == 42 && pendingGeoCallback != null) {
+            boolean allowed = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED;
+            pendingGeoCallback.invoke(pendingGeoOrigin, allowed, false);
+            pendingGeoCallback = null;
+            pendingGeoOrigin = null;
+        }
     }
     @Override protected void onSaveInstanceState(Bundle outState) {
         web.saveState(outState);
