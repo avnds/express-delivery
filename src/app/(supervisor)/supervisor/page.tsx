@@ -814,7 +814,7 @@ export default function SupervisorPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div id="usuarios" className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
           <button
             type="button"
             onClick={() =>
@@ -841,7 +841,7 @@ export default function SupervisorPage() {
             </div>
           )}
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div id="clientes" className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
           <button
             type="button"
             onClick={() =>
@@ -869,7 +869,7 @@ export default function SupervisorPage() {
           )}
         </div>
 
-        <div className="mt-6 rounded-xl border bg-white shadow-sm overflow-hidden">
+        <div id="ganhos" className="mt-6 rounded-xl border bg-white shadow-sm overflow-hidden">
           <button
             type="button"
             onClick={() =>
