@@ -869,28 +869,6 @@ export default function OperatorPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-[#FF6600] pb-4">
 
-          <div className="flex items-center gap-3">
-
-            <div className="p-1 bg-white text-white rounded-2xl shadow-md shadow-[#002B5C]/20">
-              <img
-                src="/ico android.png"
-                alt="Rotix"
-                className="h-10 w-10 object-contain"
-              />
-            </div>
-
-            <div>
-              <h1 className="text-2xl font-black text-[#002B5C] tracking-tight">
-                Painel do Operador
-              </h1>
-
-              <p className="text-xs text-slate-500">
-                Gestão e cadastro de ordens de entrega
-              </p>
-            </div>
-
-          </div>
-
           <div className="flex items-center gap-2 flex-wrap justify-end self-start sm:self-auto">
 
             <PushNotificationButton />
