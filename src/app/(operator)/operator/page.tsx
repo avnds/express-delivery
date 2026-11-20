@@ -914,31 +914,9 @@ export default function OperatorPage() {
               </span>
             </button>
 
-            <button
-              type="button"
-              onClick={() =>
-                router.push('/supervisor')
-              }
-              className="flex items-center gap-2 text-xs font-semibold text-white bg-[#002B5C] hover:bg-[#00234D] px-3 py-2 rounded-xl transition"
-            >
-              <Shield className="h-4 w-4" />
+            
 
-              <span>
-                Supervisor
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-white bg-slate-100 hover:bg-red-600 px-3 py-2 rounded-xl transition"
-            >
-              <LogOut className="h-4 w-4" />
-
-              <span>
-                Sair
-              </span>
-            </button>
+            
 
 
           </div>
