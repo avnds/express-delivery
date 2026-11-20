@@ -804,7 +804,7 @@ export default function SupervisorPage() {
                 <ChevronRight className="h-4 w-4 text-[#002B5C]" />
               )}
 
-              <span className="font-bold text-xs text-slate-800 uppercase tracking-wider">
+              <span className="text-base font-bold text-slate-800 tracking-normal normal-case">
                 Cadastro de Usuário
               </span>
             </div>
@@ -831,7 +831,7 @@ export default function SupervisorPage() {
                 <ChevronRight className="h-4 w-4 text-[#002B5C]" />
               )}
 
-              <span className="font-bold text-xs text-slate-800 uppercase tracking-wider">
+              <span className="text-base font-bold text-slate-800 tracking-normal normal-case">
                 Clientes
               </span>
             </div>
@@ -862,7 +862,7 @@ export default function SupervisorPage() {
               <div className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-[#002B5C]" />
 
-                <h2 className="font-bold text-xs text-slate-800 uppercase tracking-wider">
+                <h2 className="text-base font-bold text-slate-800 tracking-normal normal-case">
                   Ganhos dos Entregadores
                 </h2>
               </div>
@@ -1070,7 +1070,7 @@ export default function SupervisorPage() {
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
 
               <div>
-                <h2 className="font-bold text-xs text-slate-800 uppercase tracking-wider">
+                <h2 className="text-base font-bold text-slate-800 tracking-normal normal-case">
                   Ordens Registradas ({deliveries.length})
                 </h2>
 
