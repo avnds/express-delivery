@@ -216,7 +216,7 @@ export default function ClientManagement() {
     return (
         <section className="mb-8 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="mb-4">
-                <h2 className="text-xl font-bold text-[#002B5C]">
+                <h2 className="text-base font-bold text-[#002B5C]">
                     Clientes
                 </h2>
 
