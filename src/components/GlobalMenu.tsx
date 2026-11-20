@@ -26,7 +26,6 @@ export default function GlobalMenu({ role }: Props) {
     }
   };
   const [open, setOpen] = useState(false);
-  const apkUrl = 'https://github.com/avnds/express-delivery/releases/latest/download/rotix-express-delivery.apk';
   const supervisor = role === 'SUPERVISOR';
   const pageInfo = pathname === '/courier/earnings'
     ? { title: 'Extrato de Ganhos', description: 'Seus ganhos como entregador' }
@@ -74,7 +73,7 @@ export default function GlobalMenu({ role }: Props) {
                 <Icon size={16} />{label}
               </Link>
             ))}
-            <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-[#002B5C] hover:bg-slate-100"><Download size={16} />Baixar APK</a>
+            <span aria-label="APK ainda não disponível" title="Aguardando compilação e publicação do APK" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-[#002B5C] hover:bg-slate-100 opacity-60 cursor-not-allowed"><Download size={16} />APK em preparação</span>
           <button type="button" onClick={logout} disabled={loggingOut} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"><LogOut size={16} />{loggingOut ? 'Saindo...' : 'Sair'}</button>
           </div>
         </div>
@@ -85,7 +84,7 @@ export default function GlobalMenu({ role }: Props) {
               <Icon size={18} />{label}
             </Link>
           ))}
-          <a href={apkUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-[#002B5C] hover:bg-slate-100"><Download size={18} />Baixar APK</a>
+          <span aria-label="APK ainda não disponível" title="Aguardando compilação e publicação do APK" className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-[#002B5C] hover:bg-slate-100 opacity-60 cursor-not-allowed"><Download size={18} />APK em preparação</span>
           <button type="button" onClick={logout} disabled={loggingOut} className="flex items-center gap-2 rounded-lg px-3 py-3 text-left text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"><LogOut size={18} />{loggingOut ? 'Saindo...' : 'Sair'}</button>
         </div>}
       </div>
