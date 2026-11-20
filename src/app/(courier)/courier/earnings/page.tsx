@@ -181,18 +181,6 @@ export default function EarningsPage() {
 
   return (
     <div className="min-h-screen bg-slate-100 pb-12">
-      <div className="bg-[#002B5C] text-white p-5 sticky top-0 z-40 shadow-md">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-
-
-          <h1 className="font-black text-sm tracking-tight">
-            Extrato de Ganhos
-          </h1>
-
-          <div className="w-16" />
-        </div>
-      </div>
-
       <div className="max-w-md mx-auto p-4 space-y-4">
 
         {/* Card de Total Acumulado */}
