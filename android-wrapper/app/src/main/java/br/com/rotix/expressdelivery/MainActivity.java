@@ -7,6 +7,8 @@ import android.view.WindowInsets;
 import android.widget.FrameLayout;
 import android.view.ViewGroup;
 import android.graphics.Color;
+import android.content.res.Configuration;
+import android.webkit.WebSettings;
 import android.webkit.CookieManager;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
@@ -40,6 +42,11 @@ public class MainActivity extends Activity {
             root.requestApplyInsets();
         }
         web.getSettings().setJavaScriptEnabled(true);
+        if (Build.VERSION.SDK_INT >= 33) {
+            web.getSettings().setAlgorithmicDarkeningAllowed(true);
+        } else if (Build.VERSION.SDK_INT >= 29) {
+            web.getSettings().setForceDark(WebSettings.FORCE_DARK_AUTO);
+        }
         web.getSettings().setDomStorageEnabled(true);
         web.getSettings().setGeolocationEnabled(true);
         CookieManager.getInstance().setAcceptCookie(true);
@@ -57,7 +64,21 @@ public class MainActivity extends Activity {
                 else { callback.invoke(origin, false, false); requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 42); }
             }
         });
-        web.loadUrl(BASE + "/login");
+        if (state != null) {
+            web.restoreState(state);
+            if (web.getUrl() == null) web.loadUrl(BASE + "/login");
+        } else {
+            web.loadUrl(BASE + "/login");
+        }
+    }
+    @Override protected void onSaveInstanceState(Bundle outState) {
+        web.saveState(outState);
+        super.onSaveInstanceState(outState);
+    }
+    @Override public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Preserve the existing WebView, cookies and current page on UI mode changes.
+        web.invalidate();
     }
     @Override public void onBackPressed() { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); }
     @Override protected void onDestroy() { web.destroy(); super.onDestroy(); }
