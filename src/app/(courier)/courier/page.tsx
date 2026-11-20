@@ -199,22 +199,9 @@ export default function CourierPage() {
             </div>
           </div>
 
-          <a
-            href="/courier/earnings"
-            className="p-2 bg-[#001B3D] hover:bg-[#00234D] rounded-xl text-emerald-400 text-xs font-bold flex items-center gap-1 transition"
-          >
-            <DollarSign className="h-4 w-4" />
-            <span>Ganhos</span>
-          </a>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="p-2 bg-[#001B3D] hover:bg-[#002B5C] rounded-xl text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1 transition"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Sair</span>
-          </button>
+
+          
         </div>
       </div>
 
