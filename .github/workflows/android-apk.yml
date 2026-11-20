@@ -33,5 +33,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view android-latest >/dev/null 2>&1 || gh release create android-latest --title "Android APK" --notes "Versão Android de testes. Requer conexão com a internet. Notificações push em segundo plano não são suportadas neste wrapper." --prerelease
+          gh release view android-latest >/dev/null 2>&1 || gh release create android-latest --title "Android APK" --notes "Versão Android de testes. Requer conexão com a internet. Notificações push em segundo plano não são suportadas neste wrapper."
           gh release upload android-latest 'rotix-express-delivery.apk' --clobber
