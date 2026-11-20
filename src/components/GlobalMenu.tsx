@@ -27,6 +27,13 @@ export default function GlobalMenu({ role }: Props) {
   };
   const [open, setOpen] = useState(false);
   const supervisor = role === 'SUPERVISOR';
+  const pageInfo = pathname === '/courier/earnings'
+    ? { title: 'Extrato de Ganhos', description: 'Seus ganhos como entregador' }
+    : pathname === '/courier'
+      ? { title: 'Fila de Entregas', description: 'Visão do Entregador' }
+      : pathname === '/supervisor'
+        ? { title: 'Painel do Supervisor', description: 'Gerenciamento global e edição das ordens de entrega' }
+        : { title: 'Painel do Operador', description: 'Gestão e cadastro de ordens de entrega' };
   const items = [
     ...(role !== 'COURIER' ? [{ label: 'Operador', href: '/operator', icon: PackagePlus }] : [
       { label: 'Entregas', href: '/courier', icon: Truck },
@@ -44,7 +51,15 @@ export default function GlobalMenu({ role }: Props) {
     <nav aria-label="Menu global" className="sticky top-0 z-50 border-b border-slate-200 bg-white shadow-sm">
       <div className="mx-auto max-w-7xl px-4 py-2">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-black text-[#002B5C]">Rotix · Menu</span>
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="shrink-0 rounded-xl bg-white p-1 shadow-sm">
+              <img src="/ico android.png" alt="Rotix" className="h-10 w-10 object-contain" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="truncate text-sm font-black text-[#002B5C] sm:text-lg">{pageInfo.title}</h1>
+              <p className="hidden truncate text-xs text-slate-500 sm:block">{pageInfo.description}</p>
+            </div>
+          </div>
           <button type="button" className="rounded-lg border border-slate-200 p-2 text-[#002B5C] md:hidden"
             aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open}
             onClick={() => setOpen(!open)}>
