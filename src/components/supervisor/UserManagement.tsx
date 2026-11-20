@@ -267,7 +267,7 @@ export default function UserManagement() {
         </div>
 
         <div>
-          <h2 className="font-bold text-xs text-slate-800 uppercase tracking-wider">
+          <h2 className="text-base font-bold text-slate-800 tracking-normal normal-case">
             Cadastro de Usuário
           </h2>
           <p className="text-[11px] text-slate-400 mt-0.5">
@@ -436,7 +436,7 @@ export default function UserManagement() {
 
       <div className="border-t border-slate-100">
         <div className="p-4">
-          <h3 className="font-bold text-xs text-slate-800 uppercase tracking-wider">
+          <h3 className="text-base font-bold text-slate-800 tracking-normal normal-case">
             Usuários cadastrados
           </h3>
           <p className="text-[11px] text-slate-400 mt-0.5">
