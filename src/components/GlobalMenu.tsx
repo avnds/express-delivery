@@ -3,16 +3,35 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Menu, X, PackagePlus, ClipboardList, Users, ContactRound, Wallet } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Menu, X, PackagePlus, ClipboardList, Users, ContactRound, Wallet, Truck, LogOut } from 'lucide-react';
 
-type Props = { role: 'OPERATOR' | 'SUPERVISOR' };
+type Props = { role: 'OPERATOR' | 'SUPERVISOR' | 'COURIER' };
 
 export default function GlobalMenu({ role }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const logout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      const res = await fetch('/api/auth/logout', { method: 'POST' });
+      if (!res.ok) throw new Error('Logout falhou');
+      router.replace('/login');
+      router.refresh();
+    } catch {
+      alert('Não foi possível sair. Tente novamente.');
+      setLoggingOut(false);
+    }
+  };
   const [open, setOpen] = useState(false);
   const supervisor = role === 'SUPERVISOR';
   const items = [
-    { label: 'Operador', href: '/operator', icon: PackagePlus },
+    ...(role !== 'COURIER' ? [{ label: 'Operador', href: '/operator', icon: PackagePlus }] : [
+      { label: 'Entregas', href: '/courier', icon: Truck },
+      { label: 'Meus ganhos', href: '/courier/earnings', icon: Wallet },
+    ]),
     ...(supervisor ? [
       { label: 'Supervisor', href: '/supervisor', icon: ClipboardList },
       { label: 'Usuários', href: '/supervisor#usuarios', icon: Users },
@@ -39,6 +58,7 @@ export default function GlobalMenu({ role }: Props) {
                 <Icon size={16} />{label}
               </Link>
             ))}
+            <button type="button" onClick={logout} disabled={loggingOut} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"><LogOut size={16} />{loggingOut ? 'Saindo...' : 'Sair'}</button>
           </div>
         </div>
         {open && <div className="flex flex-col gap-1 border-t border-slate-100 pt-2 md:hidden">
@@ -48,6 +68,7 @@ export default function GlobalMenu({ role }: Props) {
               <Icon size={18} />{label}
             </Link>
           ))}
+          <button type="button" onClick={logout} disabled={loggingOut} className="flex items-center gap-2 rounded-lg px-3 py-3 text-left text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"><LogOut size={18} />{loggingOut ? 'Saindo...' : 'Sair'}</button>
         </div>}
       </div>
     </nav>
