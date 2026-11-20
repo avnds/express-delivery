@@ -51,6 +51,10 @@ public class MainActivity extends Activity {
         web.getSettings().setGeolocationEnabled(true);
         CookieManager.getInstance().setAcceptCookie(true);
         web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                applySystemTheme();
+            }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 if ("https".equals(uri.getScheme()) && BASE.equals(uri.getScheme() + "://" + uri.getAuthority())) return false;
@@ -71,6 +75,23 @@ public class MainActivity extends Activity {
             web.loadUrl(BASE + "/login");
         }
     }
+    private void applySystemTheme() {
+        if (web == null) return;
+        boolean dark = (getResources().getConfiguration().uiMode
+            & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        String js = "(function(){"
+            + "var dark=" + dark + ";"
+            + "var id='rotix-native-theme';"
+            + "var old=document.getElementById(id);if(old)old.remove();"
+            + "var style=document.createElement('style');style.id=id;"
+            + "style.textContent=dark?"
+            + "'html{color-scheme:dark!important;--background:#0b1220!important;--foreground:#e5edf7!important}'"
+            + ":'html{color-scheme:light!important;--background:#ffffff!important;--foreground:#171717!important}';"
+            + "document.head.appendChild(style);"
+            + "document.documentElement.style.colorScheme=dark?'dark':'light';"
+            + "})();";
+        web.evaluateJavascript(js, null);
+    }
     @Override protected void onSaveInstanceState(Bundle outState) {
         web.saveState(outState);
         super.onSaveInstanceState(outState);
@@ -79,6 +100,7 @@ public class MainActivity extends Activity {
         super.onConfigurationChanged(newConfig);
         // Preserve the existing WebView, cookies and current page on UI mode changes.
         web.invalidate();
+        applySystemTheme();
     }
     @Override public void onBackPressed() { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); }
     @Override protected void onDestroy() { web.destroy(); super.onDestroy(); }
