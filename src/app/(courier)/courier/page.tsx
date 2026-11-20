@@ -177,34 +177,6 @@ export default function CourierPage() {
 
   return (
     <div className="min-h-screen bg-slate-100 pb-12">
-      <div className="bg-[#002B5C] text-white p-5 sticky top-0 z-40 shadow-md">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1 bg-[#FFFFFF] rounded-xl shadow-md shadow-black/20">
-              <img
-                src="/ico android.png"
-                alt="Rotix"
-                className="h-10 w-10 object-contain"
-              />
-            </div>
-
-            <div>
-              <h1 className="font-black text-sm tracking-tight">
-                Fila de Entregas
-              </h1>
-
-              <p className="text-[10px] text-slate-400">
-                Visão do Entregador
-              </p>
-            </div>
-          </div>
-
-
-
-          
-        </div>
-      </div>
-
       <div className="max-w-md mx-auto p-4 space-y-4">
         <div className="bg-white rounded-2xl p-3 border border-slate-200">
           <PushNotificationButton />
